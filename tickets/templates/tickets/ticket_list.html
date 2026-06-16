@@ -7,7 +7,9 @@
 
 <body>
     <h1>Tickets</h1>
-
+    <p>
+        <a href="{% url 'ticket-create' %}">New Ticket</a>
+    </p>
     {% if tickets %}
     <ul>
         {% for ticket in tickets %}
