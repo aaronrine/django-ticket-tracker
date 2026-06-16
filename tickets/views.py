@@ -47,3 +47,16 @@ def ticket_edit(request, pk):
         "tickets/ticket_form.html",
         {"form": form},
     )
+
+def ticket_delete(request, pk):
+    ticket = get_object_or_404(Ticket, pk=pk)
+
+    if request.method == "POST":
+        ticket.delete()
+        return redirect("ticket-list")
+
+    return render(
+        request,
+        "tickets/ticket_confirm_delete.html",
+        {"ticket": ticket},
+    )

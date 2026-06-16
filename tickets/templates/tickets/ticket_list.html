@@ -15,6 +15,7 @@
             <strong>{{ ticket.title }}</strong>
             — {{ ticket.status }}
             <a href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
+            <a href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
         </li>
         {% endfor %}
     </ul>
