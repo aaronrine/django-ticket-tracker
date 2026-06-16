@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tickets</title>
+</head>
+
+<body>
+    <h1>Tickets</h1>
+
+    {% if tickets %}
+    <ul>
+        {% for ticket in tickets %}
+        <li>
+            <strong>{{ ticket.title }}</strong>
+            — {{ ticket.status }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No tickets yet.</p>
+    {% endif %}
+</body>
+
+</html>
