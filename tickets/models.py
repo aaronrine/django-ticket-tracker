@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -6,6 +7,7 @@ class Ticket(models.Model):
         OPEN = "open", "Open"
         IN_PROGRESS = "in_progress", "In Progress"
         CLOSED = "closed", "Closed"
+    
 
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -13,6 +15,28 @@ class Ticket(models.Model):
         max_length=20,
         choices=Status.choices,
         default=Status.OPEN,
+    )
+    
+    opened_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="opened_tickets",
+    )
+
+    assignees = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name="assigned_tickets",
+    )
+
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="closed_tickets",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
