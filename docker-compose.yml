@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    user: "${HOST_UID}:${HOST_GID}"
+    command: uv run python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      HOME: /tmp
+      UV_CACHE_DIR: /tmp/uv-cache
+      DEBUG: "1"
+      DATABASE_NAME: local_todo
+      DATABASE_USER: local_todo
+      DATABASE_PASSWORD: local_todo
+      DATABASE_HOST: db
+      DATABASE_PORT: "5432"
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: local_todo
+      POSTGRES_USER: local_todo
+      POSTGRES_PASSWORD: local_todo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
