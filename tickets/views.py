@@ -38,12 +38,30 @@ def ticket_create(request):
 
 def ticket_edit(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
+    old_status = ticket.status
 
     if request.method == "POST":
         form = TicketForm(request.POST, instance=ticket)
 
         if form.is_valid():
-            form.save()
+            updated_ticket = form.save(commit=False)
+
+            if (
+                old_status != Ticket.Status.CLOSED
+                and updated_ticket.status == Ticket.Status.CLOSED
+                and request.user.is_authenticated
+            ):
+                updated_ticket.closed_by = request.user
+
+            if (
+                old_status == Ticket.Status.CLOSED
+                and updated_ticket.status != Ticket.Status.CLOSED
+            ):
+                updated_ticket.closed_by = None
+
+            updated_ticket.save()
+            form.save_m2m()
+
             return redirect("ticket-list")
     else:
         form = TicketForm(instance=ticket)
