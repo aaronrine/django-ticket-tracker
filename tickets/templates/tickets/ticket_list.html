@@ -27,6 +27,13 @@
             {% endfor %}
         
             <br>
+
+            Opened by:
+            {% if ticket.opened_by %}
+            {{ ticket.opened_by.username }}
+            {% else %}
+            unknown
+            {% endif %}
         
             <a href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
             <a href="{% url 'ticket-delete' ticket.pk %}">Delete</a>

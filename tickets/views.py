@@ -19,8 +19,14 @@ def ticket_create(request):
         form = TicketForm(request.POST)
 
         if form.is_valid():
-            form.save()
-            return redirect("ticket-list")
+            ticket = form.save(commit=False)
+
+        if request.user.is_authenticated:
+            ticket.opened_by = request.user
+
+        ticket.save()
+        form.save_m2m()
+        return redirect("ticket-list")
     else:
         form = TicketForm()
 
