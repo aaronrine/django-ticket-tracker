@@ -1,0 +1,37 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>{% block title %}Ticket Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'tickets/styles.css' %}">
+</head>
+
+<body>
+    <header>
+        <h1>Ticket Tracker</h1>
+
+        {% if request.user.is_authenticated %}
+        <p>
+            Logged in as {{ request.user.username }}
+            |
+            <a href="{% url 'ticket-list' %}">Tickets</a>
+            |
+            <a href="{% url 'profile-edit' %}">Edit profile</a>
+        </p>
+
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Log out</button>
+        </form>
+        {% endif %}
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+
+</html>
