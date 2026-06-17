@@ -20,68 +20,82 @@
         <button type="submit">Log out</button>
     </form>
     <form method="get" class="filters">
-        <label for="status">Filter by status:</label>
-    
-        <select name="status" id="status">
-            <option value="">All statuses</option>
-    
-            {% for value, label in status_choices %}
-            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
-                {{ label }}
-            </option>
-            {% endfor %}
-        </select>
+        <div class="filter-field">
+            <label for="status">Status</label>
+        
+            <select name="status" id="status">
+                <option value="">All statuses</option>
+        
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="priority">Priority</label>
+        
+            <select name="priority" id="priority">
+                <option value="">All priorities</option>
+        
+                {% for value, label in priority_choices %}
+                <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="assignee">Assignee</label>
+        
+            <select name="assignee" id="assignee">
+                <option value="">All assignees</option>
+        
+                {% for user in assignees %}
+                <option value="{{ user.id }}" {% if selected_assignee == user.id|stringformat:"s" %}selected{% endif %}>
+                    {{ user.username }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="overdue">Overdue</label>
+        
+            <label>
+                <input type="checkbox" name="overdue" id="overdue" value="1" {% if selected_overdue == "1" %}checked{% endif %}>
+                Overdue only
+            </label>
+        </div>
 
-        <label for="priority">Filter by priority:</label>
+        <div class="filter-field">
+            <label for="q">Search</label>
         
-        <select name="priority" id="priority">
-            <option value="">All priorities</option>
-        
-            {% for value, label in priority_choices %}
-            <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>
-                {{ label }}
-            </option>
-            {% endfor %}
-        </select>
-        <label for="assignee">Filter by assignee:</label>
-        
-        <select name="assignee" id="assignee">
-            <option value="">All assignees</option>
-        
-            {% for user in assignees %}
-            <option value="{{ user.id }}" {% if selected_assignee == user.id|stringformat:"s" %}selected{% endif %}>
-                {{ user.username }}
-            </option>
-            {% endfor %}
-        </select>
-        <label for="overdue">
-            <input type="checkbox" name="overdue" id="overdue" value="1" {% if selected_overdue == "1" %}checked{% endif %}>
-            Overdue only
-        </label>
+            <input type="search" name="q" id="q" value="{{ search_query|default_if_none:'' }}"
+                placeholder="Title or description">
+        </div>
 
-        <label for="q">Search:</label>
+        <div class="filter-field">
+            <label for="sort">Sort by</label>
         
-        <input type="search" name="q" id="q" value="{{ search_query|default_if_none:'' }}" placeholder="Title or description">
-
-        <label for="sort">Sort by:</label>
-        
-        <select name="sort" id="sort">
-            <option value="due_date" {% if selected_sort == "due_date" %}selected{% endif %}>
-                Due date
-            </option>
-            <option value="priority" {% if selected_sort == "priority" %}selected{% endif %}>
-                Priority
-            </option>
-            <option value="created_at" {% if selected_sort == "created_at" %}selected{% endif %}>
-                Newest created
-            </option>
-            <option value="updated_at" {% if selected_sort == "updated_at" %}selected{% endif %}>
-                Recently updated
-            </option>
-            <option value="title" {% if selected_sort == "title" %}selected{% endif %}>
-                Title
-            </option>
-        </select>
+            <select name="sort" id="sort">
+                <option value="due_date" {% if selected_sort == "due_date" %}selected{% endif %}>
+                    Due date
+                </option>
+                <option value="priority" {% if selected_sort == "priority" %}selected{% endif %}>
+                    Priority
+                </option>
+                <option value="created_at" {% if selected_sort == "created_at" %}selected{% endif %}>
+                    Newest created
+                </option>
+                <option value="updated_at" {% if selected_sort == "updated_at" %}selected{% endif %}>
+                    Recently updated
+                </option>
+                <option value="title" {% if selected_sort == "title" %}selected{% endif %}>
+                    Title
+                </option>
+            </select>
+        </div>
     
         <button type="submit">Apply</button>
         <a href="{% url 'ticket-list' %}">Clear filters</a>

@@ -11,6 +11,12 @@ body {
     margin-bottom: 1rem;
 }
 
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 table {
     border-collapse: collapse;
     width: 100%;
