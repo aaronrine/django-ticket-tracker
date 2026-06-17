@@ -1,26 +1,18 @@
-{% load static %}
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html>
+{% block title %}Edit Profile{% endblock %}
 
-<head>
-    <title>Edit Profile</title>
-    <link rel="stylesheet" href="{% static 'tickets/styles.css' %}">
-</head>
+{% block content %}
+<h2>Edit Profile</h2>
 
-<body>
-    <h1>Edit Profile</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+    <button type="submit">Save</button>
+</form>
 
-        <button type="submit">Save</button>
-    </form>
-
-    <p>
-        <a href="{% url 'ticket-list' %}">Back to tickets</a>
-    </p>
-</body>
-
-</html>
+<p>
+    <a href="{% url 'ticket-list' %}">Back to tickets</a>
+</p>
+{% endblock %}
