@@ -1,23 +1,18 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
 
-<head>
-    <title>New Ticket</title>
-</head>
+{% block title %}{{ page_title }}{% endblock %}
 
-<body>
-    <h1>New Ticket</h1>
+{% block content %}
+<h2>{{ page_title }}</h2>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
 
-        <button type="submit">Create Ticket</button>
-    </form>
+    <button type="submit">{{ button_text }}</button>
+</form>
 
-    <p>
-        <a href="{% url 'ticket-list' %}">Back to tickets</a>
-    </p>
-</body>
-
-</html>
+<p>
+    <a href="{% url 'ticket-list' %}">Back to tickets</a>
+</p>
+{% endblock %}

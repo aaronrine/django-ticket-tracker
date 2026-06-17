@@ -83,7 +83,11 @@ def ticket_create(request):
     return render(
         request,
         "tickets/ticket_form.html",
-        {"form": form},
+        {
+            "form": form,
+            "page_title": "New Ticket",
+            "button_text": "Create Ticket",
+        },
     )
 
 @login_required
@@ -119,7 +123,11 @@ def ticket_edit(request, pk):
     return render(
         request,
         "tickets/ticket_form.html",
-        {"form": form},
+        {
+            "form": form,
+            "page_title": "Edit Ticket",
+            "button_text": "Save Changes",
+        },
     )
 
 @login_required
