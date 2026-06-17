@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Ticket(models.Model):
@@ -56,3 +57,13 @@ class Ticket(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_overdue(self):
+        if not self.due_date:
+            return False
+
+        if self.status == self.Status.CLOSED:
+            return False
+
+        return self.due_date < timezone.localdate()

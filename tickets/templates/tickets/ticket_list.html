@@ -88,6 +88,12 @@
                 {% endif %}
             </p>
             
+            <p>
+                {% if ticket.is_overdue %}
+                <strong>Overdue</strong>
+                {% endif %}
+            </p>
+            
             <a href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
             <a href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
         </li>
