@@ -43,3 +43,21 @@ th {
 td {
     vertical-align: top;
 }
+
+.button-link,
+button {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid #333;
+    border-radius: 0.25rem;
+    background: #f5f5f5;
+    color: #111;
+    text-decoration: none;
+    cursor: pointer;
+    font: inherit;
+}
+
+.button-link:hover,
+button:hover {
+    background: #e8e8e8;
+}
