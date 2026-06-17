@@ -1,23 +1,18 @@
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %}
 
-<head>
-    <title>Delete Ticket</title>
-</head>
+{% block title %}Delete Ticket{% endblock %}
 
-<body>
-    <h1>Delete Ticket</h1>
+{% block content %}
+<h2>Delete Ticket</h2>
 
-    <p>Are you sure you want to delete "{{ ticket.title }}"?</p>
+<p>Are you sure you want to delete "{{ ticket.title }}"?</p>
 
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit">Yes, delete</button>
-    </form>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Yes, delete</button>
+</form>
 
-    <p>
-        <a href="{% url 'ticket-list' %}">Cancel</a>
-    </p>
-</body>
-
-</html>
+<p>
+    <a href="{% url 'ticket-list' %}">Cancel</a>
+</p>
+{% endblock %}
