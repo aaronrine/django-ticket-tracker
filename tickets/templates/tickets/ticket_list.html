@@ -55,6 +55,10 @@
             <input type="checkbox" name="overdue" id="overdue" value="1" {% if selected_overdue == "1" %}checked{% endif %}>
             Overdue only
         </label>
+
+        <label for="q">Search:</label>
+        
+        <input type="search" name="q" id="q" value="{{ search_query|default_if_none:'' }}" placeholder="Title or description">
     
         <button type="submit">Apply</button>
         <a href="{% url 'ticket-list' %}">Clear filters</a>

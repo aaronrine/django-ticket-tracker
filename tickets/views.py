@@ -5,6 +5,7 @@ from .forms import TicketForm
 from .models import Ticket
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 @login_required
 def ticket_list(request):
@@ -12,6 +13,7 @@ def ticket_list(request):
     priority = request.GET.get("priority")
     overdue = request.GET.get("overdue")
     assignee = request.GET.get("assignee")
+    q = request.GET.get("q")
 
     tickets = Ticket.objects.all()
 
@@ -27,6 +29,10 @@ def ticket_list(request):
         )
     if assignee:
         tickets = tickets.filter(assignees__id=assignee)
+    if q:
+        tickets = tickets.filter(
+            Q(title__icontains=q) | Q(description__icontains=q)
+        )
 
     tickets = tickets.order_by("due_date")
 
@@ -43,6 +49,7 @@ def ticket_list(request):
             "selected_overdue": overdue,
             "assignees": User.objects.all().order_by("username"),
             "selected_assignees": assignee,
+            "search_query": q,
         },
     )
 
