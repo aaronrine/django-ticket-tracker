@@ -81,3 +81,7 @@ button:hover {
 .danger-button:hover {
     background: #f8e6e8;
 }
+
+.overdue-label {
+    color: #9b111e;
+}
