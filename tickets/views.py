@@ -6,6 +6,7 @@ from .models import Ticket
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.core.paginator import Paginator
 
 @login_required
 def ticket_list(request):
@@ -44,13 +45,22 @@ def ticket_list(request):
     }
 
     tickets = tickets.order_by(allowed_sorts.get(sort, "due_date"))
+    paginator = Paginator(tickets, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    query_params = request.GET.copy()
+
+    if "page" in query_params:
+        del query_params["page"]
 
     User = get_user_model()
     return render(
         request,
         "tickets/ticket_list.html",
         {
-            "tickets": tickets,
+            "tickets": page_obj,
+            "page_obj": page_obj,
             "status_choices": Ticket.Status.choices,
             "selected_status": status,
             "priority_choices": Ticket.Priority.choices,
@@ -60,6 +70,7 @@ def ticket_list(request):
             "selected_assignees": assignee,
             "search_query": q,
             "selected_sort": sort,
+            "query_params": query_params.urlencode(),
         },
     )
 
