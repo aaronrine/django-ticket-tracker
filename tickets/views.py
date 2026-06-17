@@ -14,6 +14,7 @@ def ticket_list(request):
     overdue = request.GET.get("overdue")
     assignee = request.GET.get("assignee")
     q = request.GET.get("q")
+    sort = request.GET.get("sort", "due_date")
 
     tickets = Ticket.objects.all()
 
@@ -34,7 +35,15 @@ def ticket_list(request):
             Q(title__icontains=q) | Q(description__icontains=q)
         )
 
-    tickets = tickets.order_by("due_date")
+    allowed_sorts = {
+        "due_date": "due_date",
+        "priority": "priority",
+        "created_at": "-created_at",
+        "updated_at": "-updated_at",
+        "title": "title",
+    }
+
+    tickets = tickets.order_by(allowed_sorts.get(sort, "due_date"))
 
     User = get_user_model()
     return render(
@@ -50,6 +59,7 @@ def ticket_list(request):
             "assignees": User.objects.all().order_by("username"),
             "selected_assignees": assignee,
             "search_query": q,
+            "selected_sort": sort,
         },
     )
 
