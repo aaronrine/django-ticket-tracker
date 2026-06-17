@@ -10,6 +10,12 @@
     <p>
         <a href="{% url 'ticket-create' %}">New Ticket</a>
     </p>
+    <p>Logged in as {{ request.user.username }}</p>
+    
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Log out</button>
+    </form>
     {% if tickets %}
     <ul>
         {% for ticket in tickets %}
@@ -43,6 +49,17 @@
             {% else %}
             not closed
             {% endif %}
+
+            <p>Priority: {{ ticket.get_priority_display }}</p>
+            
+            <p>
+                Due:
+                {% if ticket.due_date %}
+                {{ ticket.due_date }}
+                {% else %}
+                No due date
+                {% endif %}
+            </p>
             
             <a href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
             <a href="{% url 'ticket-delete' ticket.pk %}">Delete</a>

@@ -7,6 +7,10 @@ class Ticket(models.Model):
         OPEN = "open", "Open"
         IN_PROGRESS = "in_progress", "In Progress"
         CLOSED = "closed", "Closed"
+    class Priority(models.TextChoices):
+        LOW = "LOW", "Low"
+        MEDIUM = "MEDIUM", "Medium"
+        HIGH = "HIGH", "High"
     
 
     title = models.CharField(max_length=200)
@@ -40,6 +44,15 @@ class Ticket(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.MEDIUM,
+    )
+    due_date = models.DateField(
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return self.title
