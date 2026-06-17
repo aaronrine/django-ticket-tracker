@@ -97,8 +97,10 @@
             </select>
         </div>
     
-        <button type="submit">Apply</button>
-        <a href="{% url 'ticket-list' %}">Clear filters</a>
+        <div class="filter-actions">
+            <button type="submit">Apply</button>
+            <a href="{% url 'ticket-list' %}">Clear filters</a>
+        </div>
     </form>
     <p>{{ tickets|length }} ticket{{ tickets|length|pluralize }} found</p>
     {% if tickets %}

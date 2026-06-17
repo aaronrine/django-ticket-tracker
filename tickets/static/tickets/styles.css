@@ -17,6 +17,13 @@ body {
     gap: 0.25rem;
 }
 
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    align-self: end;
+}
+
 table {
     border-collapse: collapse;
     width: 100%;
