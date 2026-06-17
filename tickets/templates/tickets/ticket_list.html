@@ -40,6 +40,10 @@
             </option>
             {% endfor %}
         </select>
+        <label for="overdue">
+            <input type="checkbox" name="overdue" id="overdue" value="1" {% if selected_overdue == "1" %}checked{% endif %}>
+            Overdue only
+        </label>
     
         <button type="submit">Apply</button>
     </form>

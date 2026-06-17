@@ -3,11 +3,13 @@ from django.contrib.auth.decorators import login_required
 
 from .forms import TicketForm
 from .models import Ticket
+from django.utils import timezone
 
 @login_required
 def ticket_list(request):
     status = request.GET.get("status")
     priority = request.GET.get("priority")
+    overdue = request.GET.get("overdue")
 
     tickets = Ticket.objects.all()
 
@@ -15,13 +17,26 @@ def ticket_list(request):
         tickets = tickets.filter(status=status)
     if priority:
         tickets = tickets.filter(priority=priority)
+    if overdue == "1":
+        tickets = tickets.filter(
+            due_date__lt=timezone.localdate()
+        ).exclude(
+            status=Ticket.Status.CLOSED
+        )
 
     tickets = tickets.order_by("due_date")
 
     return render(
         request,
         "tickets/ticket_list.html",
-        {"tickets": tickets, "status_choices": Ticket.Status.choices, "selected_status": status, "priority_choices": Ticket.Priority.choices, "selected_priority": priority},
+        {
+            "tickets": tickets,
+            "status_choices": Ticket.Status.choices,
+            "selected_status": status,
+            "priority_choices": Ticket.Priority.choices,
+            "selected_priority": priority,
+            "selected_overdue": overdue,
+        },
     )
 
 @login_required
