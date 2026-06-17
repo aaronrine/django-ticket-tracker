@@ -3,7 +3,7 @@ body {
     margin: 2rem;
 }
 
-form {
+.filters {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
