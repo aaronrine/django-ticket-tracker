@@ -6,12 +6,19 @@ from .models import Ticket
 
 @login_required
 def ticket_list(request):
-    tickets = Ticket.objects.all().order_by("due_date")
+    status = request.GET.get("status")
+
+    tickets = Ticket.objects.all()
+
+    if status:
+        tickets = tickets.filter(status=status)
+
+    tickets = tickets.order_by("due_date")
 
     return render(
         request,
         "tickets/ticket_list.html",
-        {"tickets": tickets},
+        {"tickets": tickets, "status_choices": Ticket.Status.choices, "selected_status": status},
     )
 
 @login_required
