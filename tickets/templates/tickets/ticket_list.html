@@ -161,7 +161,7 @@
     
                 <td>
                     <a href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
-                    <a href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
+                    <a class="danger-link" href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
                 </td>
             </tr>
             {% endfor %}

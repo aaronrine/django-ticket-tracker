@@ -61,3 +61,8 @@ button {
 button:hover {
     background: #e8e8e8;
 }
+
+.danger-link {
+    color: #9b111e;
+    font-weight: bold;
+}
