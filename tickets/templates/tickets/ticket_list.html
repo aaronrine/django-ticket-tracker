@@ -1,28 +1,9 @@
-{% load static %}
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html>
+{% block title %}Tickets{% endblock %}
 
-<head>
-    <title>Tickets</title>
-    <link rel="stylesheet" href="{% static 'tickets/styles.css' %}">
-</head>
-
-<body>
-    <h1>Tickets</h1>
-    <p>
-        <a href="{% url 'ticket-create' %}">New Ticket</a>
-    </p>
-    <p>
-        Logged in as {{ request.user.username }}
-        |
-        <a href="{% url 'profile-edit' %}">Edit profile</a>
-    </p>
-    
-    <form method="post" action="{% url 'logout' %}">
-        {% csrf_token %}
-        <button type="submit">Log out</button>
-    </form>
+{% block content %}
+<h2>Tickets</h2>
     <form method="get" class="filters">
         <div class="filter-field">
             <label for="status">Status</label>
@@ -186,6 +167,4 @@
     {% else %}
     <p>No tickets found.</p>
     {% endif %}
-</body>
-
-</html>
+{% endblock %}
