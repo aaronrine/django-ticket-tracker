@@ -28,6 +28,18 @@
             </option>
             {% endfor %}
         </select>
+
+        <label for="priority">Filter by priority:</label>
+        
+        <select name="priority" id="priority">
+            <option value="">All priorities</option>
+        
+            {% for value, label in priority_choices %}
+            <option value="{{ value }}" {% if selected_priority == value %}selected{% endif %}>
+                {{ label }}
+            </option>
+            {% endfor %}
+        </select>
     
         <button type="submit">Apply</button>
     </form>

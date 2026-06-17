@@ -7,18 +7,21 @@ from .models import Ticket
 @login_required
 def ticket_list(request):
     status = request.GET.get("status")
+    priority = request.GET.get("priority")
 
     tickets = Ticket.objects.all()
 
     if status:
         tickets = tickets.filter(status=status)
+    if priority:
+        tickets = tickets.filter(priority=priority)
 
     tickets = tickets.order_by("due_date")
 
     return render(
         request,
         "tickets/ticket_list.html",
-        {"tickets": tickets, "status_choices": Ticket.Status.choices, "selected_status": status},
+        {"tickets": tickets, "status_choices": Ticket.Status.choices, "selected_status": status, "priority_choices": Ticket.Priority.choices, "selected_priority": priority},
     )
 
 @login_required
