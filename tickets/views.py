@@ -6,7 +6,7 @@ from .models import Ticket
 
 @login_required
 def ticket_list(request):
-    tickets = Ticket.objects.all().order_by("-created_at")
+    tickets = Ticket.objects.all().order_by("due_date")
 
     return render(
         request,
