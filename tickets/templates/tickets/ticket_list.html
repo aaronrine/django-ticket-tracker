@@ -65,6 +65,7 @@
     </form>
     {% if tickets %}
     <ul>
+        <p>{{ tickets|length }} ticket{{ tickets|length|pluralize }} found</p>
         {% for ticket in tickets %}
         <li>
             <strong>{{ ticket.title }}</strong>
