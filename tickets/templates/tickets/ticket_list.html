@@ -112,6 +112,8 @@
                 <th>Status</th>
                 <th>Priority</th>
                 <th>Due</th>
+                <th>Created</th>
+                <th>Updated</th>
                 <th>Assignees</th>
                 <th>Opened by</th>
                 <th>Closed by</th>
@@ -142,6 +144,8 @@
                     No due date
                     {% endif %}
                 </td>
+                <td>{{ ticket.created_at|date:"M j, Y g:i A" }}</td>
+                <td>{{ ticket.updated_at|date:"M j, Y g:i A" }}</td>
     
                 <td>
                     {% for user in ticket.assignees.all %}
