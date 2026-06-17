@@ -4,12 +4,14 @@ from django.contrib.auth.decorators import login_required
 from .forms import TicketForm
 from .models import Ticket
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 
 @login_required
 def ticket_list(request):
     status = request.GET.get("status")
     priority = request.GET.get("priority")
     overdue = request.GET.get("overdue")
+    assignee = request.GET.get("assignee")
 
     tickets = Ticket.objects.all()
 
@@ -23,9 +25,12 @@ def ticket_list(request):
         ).exclude(
             status=Ticket.Status.CLOSED
         )
+    if assignee:
+        tickets = tickets.filter(assignees__id=assignee)
 
     tickets = tickets.order_by("due_date")
 
+    User = get_user_model()
     return render(
         request,
         "tickets/ticket_list.html",
@@ -36,6 +41,8 @@ def ticket_list(request):
             "priority_choices": Ticket.Priority.choices,
             "selected_priority": priority,
             "selected_overdue": overdue,
+            "assignees": User.objects.all().order_by("username"),
+            "selected_assignees": assignee,
         },
     )
 

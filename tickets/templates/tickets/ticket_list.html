@@ -40,6 +40,17 @@
             </option>
             {% endfor %}
         </select>
+        <label for="assignee">Filter by assignee:</label>
+        
+        <select name="assignee" id="assignee">
+            <option value="">All assignees</option>
+        
+            {% for user in assignees %}
+            <option value="{{ user.id }}" {% if selected_assignee == user.id|stringformat:"s" %}selected{% endif %}>
+                {{ user.username }}
+            </option>
+            {% endfor %}
+        </select>
         <label for="overdue">
             <input type="checkbox" name="overdue" id="overdue" value="1" {% if selected_overdue == "1" %}checked{% endif %}>
             Overdue only
