@@ -72,3 +72,12 @@ button:hover {
     gap: 0.5rem;
     align-items: center;
 }
+
+.danger-button {
+    border-color: #9b111e;
+    color: #9b111e;
+}
+
+.danger-button:hover {
+    background: #f8e6e8;
+}
