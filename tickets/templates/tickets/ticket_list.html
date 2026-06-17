@@ -83,65 +83,81 @@
         <button type="submit">Apply</button>
         <a href="{% url 'ticket-list' %}">Clear filters</a>
     </form>
+    <p>{{ tickets|length }} ticket{{ tickets|length|pluralize }} found</p>
     {% if tickets %}
-    <ul>
-        <p>{{ tickets|length }} ticket{{ tickets|length|pluralize }} found</p>
-        {% for ticket in tickets %}
-        <li>
-            <strong>{{ ticket.title }}</strong>
-            — {{ ticket.status }}
-        
-            <br>
-        
-            Assignees:
-            {% for user in ticket.assignees.all %}
-            {{ user.username }}{% if not forloop.last %}, {% endif %}
-            {% empty %}
-            none
+    
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Due</th>
+                <th>Assignees</th>
+                <th>Opened by</th>
+                <th>Closed by</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+    
+        <tbody>
+            {% for ticket in tickets %}
+            <tr>
+                <td>
+                    <strong>{{ ticket.title }}</strong>
+    
+                    {% if ticket.is_overdue %}
+                    <br>
+                    <strong>Overdue</strong>
+                    {% endif %}
+                </td>
+    
+                <td>{{ ticket.get_status_display }}</td>
+    
+                <td>{{ ticket.get_priority_display }}</td>
+    
+                <td>
+                    {% if ticket.due_date %}
+                    {{ ticket.due_date }}
+                    {% else %}
+                    No due date
+                    {% endif %}
+                </td>
+    
+                <td>
+                    {% for user in ticket.assignees.all %}
+                    {{ user.username }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                    none
+                    {% endfor %}
+                </td>
+    
+                <td>
+                    {% if ticket.opened_by %}
+                    {{ ticket.opened_by.username }}
+                    {% else %}
+                    unknown
+                    {% endif %}
+                </td>
+    
+                <td>
+                    {% if ticket.closed_by %}
+                    {{ ticket.closed_by.username }}
+                    {% else %}
+                    not closed
+                    {% endif %}
+                </td>
+    
+                <td>
+                    <a href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
+                    <a href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
+                </td>
+            </tr>
             {% endfor %}
-        
-            <br>
-
-            Opened by:
-            {% if ticket.opened_by %}
-            {{ ticket.opened_by.username }}
-            {% else %}
-            unknown
-            {% endif %}
-            
-            <br>
-            
-            Closed by:
-            {% if ticket.closed_by %}
-            {{ ticket.closed_by.username }}
-            {% else %}
-            not closed
-            {% endif %}
-
-            <p>Priority: {{ ticket.get_priority_display }}</p>
-            
-            <p>
-                Due:
-                {% if ticket.due_date %}
-                {{ ticket.due_date }}
-                {% else %}
-                No due date
-                {% endif %}
-            </p>
-            
-            <p>
-                {% if ticket.is_overdue %}
-                <strong>Overdue</strong>
-                {% endif %}
-            </p>
-            
-            <a href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
-            <a href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
-        </li>
-        {% endfor %}
-    </ul>
+        </tbody>
+    </table>
     {% else %}
-    <p>No tickets yet.</p>
+    <p>No tickets found.</p>
     {% endif %}
 </body>
 
