@@ -100,7 +100,6 @@ def ticket_edit(request, pk):
             if (
                 old_status != Ticket.Status.CLOSED
                 and updated_ticket.status == Ticket.Status.CLOSED
-                and request.user.is_authenticated
             ):
                 updated_ticket.closed_by = request.user
 
