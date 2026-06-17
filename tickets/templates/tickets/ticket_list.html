@@ -13,7 +13,11 @@
     <p>
         <a href="{% url 'ticket-create' %}">New Ticket</a>
     </p>
-    <p>Logged in as {{ request.user.username }}</p>
+    <p>
+        Logged in as {{ request.user.username }}
+        |
+        <a href="{% url 'profile-edit' %}">Edit profile</a>
+    </p>
     
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
