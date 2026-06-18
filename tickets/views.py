@@ -17,6 +17,9 @@ def ticket_list(request):
     q = request.GET.get("q")
     sort = request.GET.get("sort", "due_date")
 
+    if "status" not in request.GET:
+        status = Ticket.Status.OPEN
+
     tickets = Ticket.objects.all()
 
     if status:
