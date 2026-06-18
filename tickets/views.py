@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from teams.models import Team
 from django.http import HttpResponseForbidden
 
-from teams.permissions import can_view_team_ticket, can_delete_team_ticket, can_change_team_ticket_status
+from teams.permissions import can_view_team_ticket, can_delete_team_ticket, can_change_team_ticket_status, can_create_team_ticket
 
 @login_required
 def ticket_list(request):
@@ -96,8 +96,11 @@ def ticket_create(request):
         if form.is_valid():
             ticket = form.save(commit=False)
             ticket.opened_by = request.user
+            if ticket.assigned_team and not can_create_team_ticket(request.user, ticket.assigned_team):
+                return HttpResponseForbidden(
+                    "You do not have permission to create tickets for this team."
+                )
             ticket.save()
-            form.save_m2m()
             return redirect(next_url)
 
 
