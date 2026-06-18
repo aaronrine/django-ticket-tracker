@@ -75,4 +75,23 @@
         </table>
     </section>
 </div>
+{% if member_page_obj.has_other_pages %}
+<nav class="pagination">
+    {% if member_page_obj.has_previous %}
+    <a href="?next={{ next_url|urlencode }}&member_page={{ member_page_obj.previous_page_number }}">
+        Previous
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ member_page_obj.number }} of {{ member_page_obj.paginator.num_pages }}
+    </span>
+
+    {% if member_page_obj.has_next %}
+    <a href="?next={{ next_url|urlencode }}&member_page={{ member_page_obj.next_page_number }}">
+        Next
+    </a>
+    {% endif %}
+</nav>
+{% endif %}
 {% endblock %}

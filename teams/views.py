@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from .models import Team, TeamMembership
 from django.urls import reverse
 from urllib.parse import urlencode
+from django.core.paginator import Paginator
 
 
 @login_required
@@ -65,17 +66,27 @@ def team_list(request):
         .order_by("username")
     )
 
+    paginator = Paginator(teams, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+
     return render(
         request,
         "teams/team_list.html",
         {
-            "teams": teams,
+            "teams": page_obj,
+            "page_obj": page_obj,
             "members": members,
             "selected_q": q,
             "selected_member": member,
             "selected_membership": membership,
             "selected_sort": sort,
             "return_url": request.get_full_path(),
+            "query_params": query_params.urlencode(),
         },
     )
 
@@ -132,13 +143,18 @@ def team_manage(request, pk):
         form = AddTeamMemberForm(team=team)
 
     memberships = team.memberships.select_related("user").order_by(
-        "role",
-        "user__username",
+    "role",
+    "user__username",
     )
+
+    member_paginator = Paginator(memberships, 10)
+    member_page_number = request.GET.get("member_page") or request.POST.get("member_page")
+    member_page_obj = member_paginator.get_page(member_page_number)
 
     return render(request, "teams/team_manage.html", {
         "team": team,
-        "memberships": memberships,
+        "memberships": member_page_obj,
+        "member_page_obj": member_page_obj,
         "form": form,
-        "next_url": next_url
+        "next_url": next_url,
     })

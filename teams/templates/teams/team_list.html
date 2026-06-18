@@ -78,11 +78,15 @@
         <p class="muted">Members</p>
 
         <ul class="member-chip-list">
-            {% for member in team.members.all %}
+            {% for member in team.members.all|slice:":8" %}
             <li class="member-chip">{{ member.username }}</li>
             {% empty %}
             <li class="muted">No members yet.</li>
             {% endfor %}
+            
+            {% if team.member_count > 8 %}
+            <li class="member-chip muted">More members…</li>
+            {% endif %}
         </ul>
     </article>
     {% empty %}
@@ -92,4 +96,23 @@
     </div>
     {% endfor %}
 </div>
+{% if page_obj.has_other_pages %}
+<nav class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.previous_page_number }}">
+        Previous
+    </a>
+    {% endif %}
+
+    <span>
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+    <a href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.next_page_number }}">
+        Next
+    </a>
+    {% endif %}
+</nav>
+{% endif %}
 {% endblock %}
