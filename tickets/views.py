@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from teams.models import Team
 from django.http import HttpResponseForbidden
 
-from teams.permissions import can_view_team_ticket
+from teams.permissions import can_view_team_ticket, can_delete_team_ticket
 
 @login_required
 def ticket_list(request):
@@ -160,6 +160,8 @@ def ticket_edit(request, pk):
 @login_required
 def ticket_delete(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
+    if not can_delete_team_ticket(request.user, ticket):
+        return HttpResponseForbidden("You do not have permission to delete this ticket.")
     next_url = request.POST.get("next") or request.GET.get("next") or reverse("ticket-list")
 
     if request.method == "POST":
