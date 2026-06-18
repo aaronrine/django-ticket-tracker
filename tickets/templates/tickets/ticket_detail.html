@@ -90,13 +90,15 @@
         </div>
 
         <div class="detail-full">
-            <dt>Assignees</dt>
+            <dt>Assigned to</dt>
             <dd>
-                {% for user in ticket.assignees.all %}
-                <span class="pill">{{ user.username }}</span>
-                {% empty %}
-                <span class="muted">None</span>
-                {% endfor %}
+                {% if ticket.assigned_user %}
+                {{ ticket.assigned_user.username }}
+                {% elif ticket.assigned_team %}
+                {{ ticket.assigned_team.name }}
+                {% else %}
+                <span class="muted">Unassigned</span>
+                {% endif %}
             </dd>
         </div>
     </dl>
