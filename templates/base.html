@@ -17,7 +17,7 @@
             Logged in as {{ request.user.username }}
             |
             <a href="{% url 'ticket-list' %}">Tickets</a>
-            |
+            <a href="{% url 'teams:team-list' %}">Teams</a>
             <a href="{% url 'profile-edit' %}">Edit profile</a>
         </p>
 

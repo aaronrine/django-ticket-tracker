@@ -45,6 +45,7 @@ td {
 }
 
 .button-link,
+.button,
 button {
     display: inline-block;
     padding: 0.4rem 0.75rem;
@@ -58,8 +59,14 @@ button {
 }
 
 .button-link:hover,
+.button:hover,
 button:hover {
     background: #e8e8e8;
+}
+
+.button.secondary {
+    border-color: #777;
+    color: #333;
 }
 
 .danger-link {
@@ -67,19 +74,21 @@ button:hover {
     font-weight: bold;
 }
 
-.table-actions {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.danger-button {
+.danger-button,
+.danger {
     border-color: #9b111e;
     color: #9b111e;
 }
 
-.danger-button:hover {
+.danger-button:hover,
+.danger:hover {
     background: #f8e6e8;
+}
+
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
 }
 
 .overdue-label {
@@ -91,16 +100,24 @@ button:hover {
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .eyebrow {
     margin: 0;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 700;
     color: #666;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
 }
+
+.muted {
+    color: #777;
+    opacity: 0.8;
+}
+
+/* Ticket detail */
 
 .detail-card {
     border: 1px solid #ccc;
@@ -151,6 +168,93 @@ button:hover {
     background: #fff;
 }
 
-.muted {
-    color: #777;
+/* Teams */
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+}
+
+.team-card,
+.card,
+.empty-card {
+    border: 1px solid #ddd;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background: #fff;
+}
+
+.team-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.team-card-header h2,
+.card h2 {
+    margin-top: 0;
+}
+
+.member-chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.member-chip,
+.role-pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.9rem;
+    background: #f7f7f7;
+}
+
+.role-leader {
+    font-weight: 700;
+}
+
+.team-layout {
+    display: grid;
+    gap: 1rem;
+}
+
+.member-form {
+    display: grid;
+    gap: 1rem;
+    max-width: 28rem;
+}
+
+.form-row {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.form-row select {
+    max-width: 100%;
+}
+
+.member-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.member-table th,
+.member-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.actions-column {
+    text-align: right;
+    white-space: nowrap;
 }

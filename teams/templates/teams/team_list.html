@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Teams</p>
+        <h1>Teams you lead</h1>
+    </div>
+</div>
+
+<div class="team-grid">
+    {% for team in teams %}
+    <article class="team-card">
+        <div class="team-card-header">
+            <h2>{{ team.name }}</h2>
+            <a class="button secondary" href="{% url 'teams:team-manage' team.pk %}">
+                Manage
+            </a>
+        </div>
+
+        <p class="muted">Members</p>
+
+        <ul class="member-chip-list">
+            {% for member in team.members.all %}
+            <li class="member-chip">{{ member.username }}</li>
+            {% empty %}
+            <li class="muted">No members yet.</li>
+            {% endfor %}
+        </ul>
+    </article>
+    {% empty %}
+    <div class="empty-card">
+        <p>You do not lead any teams yet.</p>
+        <p class="muted">Teams can be created in admin for now.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
