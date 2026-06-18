@@ -154,3 +154,13 @@ def ticket_delete(request, pk):
         "tickets/ticket_confirm_delete.html",
         {"ticket": ticket},
     )
+
+@login_required
+def ticket_detail(request, pk):
+    ticket = get_object_or_404(Ticket, pk=pk)
+
+    return render(
+        request,
+        "tickets/ticket_detail.html",
+        {"ticket": ticket},
+    )

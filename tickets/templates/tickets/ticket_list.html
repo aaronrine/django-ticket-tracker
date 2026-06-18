@@ -113,7 +113,9 @@
             {% for ticket in tickets %}
             <tr>
                 <td>
+                    <a href="{% url 'ticket-detail' ticket.pk %}">
                     <strong>{{ ticket.title }}</strong>
+                    </a>
     
                     {% if ticket.is_overdue %}
                     <br>
@@ -166,6 +168,7 @@
                     </div>
                 </td>
             </tr>
+            
             {% endfor %}
         </tbody>
     </table>

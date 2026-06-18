@@ -85,3 +85,72 @@ button:hover {
 .overdue-label {
     color: #9b111e;
 }
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.eyebrow {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1rem;
+    background: #fff;
+}
+
+.ticket-description {
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+}
+
+.detail-grid div {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #f8f8f8;
+}
+
+.detail-grid dt {
+    margin-bottom: 0.25rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.detail-grid dd {
+    margin: 0;
+}
+
+.detail-full {
+    grid-column: 1 / -1;
+}
+
+.pill {
+    display: inline-block;
+    margin: 0.25rem 0.25rem 0.25rem 0;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.muted {
+    color: #777;
+}

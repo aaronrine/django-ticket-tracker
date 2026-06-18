@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Ticket detail</p>
+        <h2>{{ ticket.title }}</h2>
+    </div>
+
+    <div class="table-actions">
+        <a class="button-link" href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
+        <a class="danger-link" href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
+    </div>
+</div>
+
+<section class="detail-card">
+    <div class="ticket-description">
+        {% if ticket.description %}
+        {{ ticket.description|linebreaks }}
+        {% else %}
+        <p class="muted">No description provided.</p>
+        {% endif %}
+    </div>
+
+    <dl class="detail-grid">
+        <div>
+            <dt>Status</dt>
+            <dd>{{ ticket.get_status_display }}</dd>
+        </div>
+
+        <div>
+            <dt>Priority</dt>
+            <dd>{{ ticket.get_priority_display }}</dd>
+        </div>
+
+        <div>
+            <dt>Overdue</dt>
+            <dd>
+                {% if ticket.is_overdue %}
+                <strong class="overdue-label">Overdue</strong>
+                {% else %}
+                No
+                {% endif %}
+            </dd>
+        </div>
+
+        <div>
+            <dt>Due date</dt>
+            <dd>
+                {% if ticket.due_date %}
+                {{ ticket.due_date }}
+                {% else %}
+                No due date
+                {% endif %}
+            </dd>
+        </div>
+
+        <div>
+            <dt>Created</dt>
+            <dd>{{ ticket.created_at|date:"M j, Y g:i A" }}</dd>
+        </div>
+
+        <div>
+            <dt>Updated</dt>
+            <dd>{{ ticket.updated_at|date:"M j, Y g:i A" }}</dd>
+        </div>
+
+        <div>
+            <dt>Opened by</dt>
+            <dd>
+                {% if ticket.opened_by %}
+                {{ ticket.opened_by.username }}
+                {% else %}
+                Unknown
+                {% endif %}
+            </dd>
+        </div>
+
+        <div>
+            <dt>Closed by</dt>
+            <dd>
+                {% if ticket.closed_by %}
+                {{ ticket.closed_by.username }}
+                {% else %}
+                Not closed
+                {% endif %}
+            </dd>
+        </div>
+
+        <div class="detail-full">
+            <dt>Assignees</dt>
+            <dd>
+                {% for user in ticket.assignees.all %}
+                <span class="pill">{{ user.username }}</span>
+                {% empty %}
+                <span class="muted">None</span>
+                {% endfor %}
+            </dd>
+        </div>
+    </dl>
+</section>
+
+<p>
+    <a href="{% url 'ticket-list' %}">Back to tickets</a>
+</p>
+{% endblock %}
