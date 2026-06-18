@@ -4,7 +4,7 @@
 <div class="page-header">
     <div>
         <p class="eyebrow">Teams</p>
-        <h1>Teams you lead</h1>
+        <h1>All teams</h1>
     </div>
 </div>
 
@@ -12,17 +12,32 @@
     {% for team in teams %}
     <article class="team-card">
         <div class="team-card-header">
-            <h2>{{ team.name }}</h2>
+            <div>
+                <h2>{{ team.name }}</h2>
+
+                {% if team.user_is_leader %}
+                <span class="role-pill role-leader">You lead this team</span>
+                {% elif team.user_is_member %}
+                <span class="role-pill">Your team</span>
+                {% else %}
+                <span class="muted">Not a member</span>
+                {% endif %}
+            </div>
+
+            {% if team.user_is_leader %}
             <a class="button secondary" href="{% url 'teams:team-manage' team.pk %}">
                 Manage
             </a>
+            {% endif %}
         </div>
 
         <p class="muted">Members</p>
 
         <ul class="member-chip-list">
             {% for member in team.members.all %}
-            <li class="member-chip">{{ member.username }}</li>
+            <li class="member-chip">
+                {{ member.username }}
+            </li>
             {% empty %}
             <li class="muted">No members yet.</li>
             {% endfor %}
@@ -30,7 +45,7 @@
     </article>
     {% empty %}
     <div class="empty-card">
-        <p>You do not lead any teams yet.</p>
+        <p>No teams exist yet.</p>
         <p class="muted">Teams can be created in admin for now.</p>
     </div>
     {% endfor %}

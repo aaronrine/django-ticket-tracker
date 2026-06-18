@@ -1,17 +1,32 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-
+from django.db.models import Exists, OuterRef
 from .forms import AddTeamMemberForm
 from .models import Team, TeamMembership
 
 
 @login_required
 def team_list(request):
-    teams = Team.objects.filter(
-        memberships__user=request.user,
-        memberships__role=TeamMembership.Role.LEADER,
-    ).distinct().order_by("name")
+    teams = (
+        Team.objects.annotate(
+            user_is_member=Exists(
+                TeamMembership.objects.filter(
+                    team=OuterRef("pk"),
+                    user=request.user,
+                )
+            ),
+            user_is_leader=Exists(
+                TeamMembership.objects.filter(
+                    team=OuterRef("pk"),
+                    user=request.user,
+                    role=TeamMembership.Role.LEADER,
+                )
+            ),
+        )
+        .prefetch_related("members")
+        .order_by("name")
+    )
 
     return render(request, "teams/team_list.html", {
         "teams": teams,
