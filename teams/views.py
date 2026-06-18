@@ -1,36 +1,83 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.db.models import Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef
 from .forms import AddTeamMemberForm
+from django.contrib.auth import get_user_model
 from .models import Team, TeamMembership
+from django.urls import reverse
+from urllib.parse import urlencode
 
 
 @login_required
 def team_list(request):
-    teams = (
-        Team.objects.annotate(
-            user_is_member=Exists(
-                TeamMembership.objects.filter(
-                    team=OuterRef("pk"),
-                    user=request.user,
-                )
-            ),
-            user_is_leader=Exists(
-                TeamMembership.objects.filter(
-                    team=OuterRef("pk"),
-                    user=request.user,
-                    role=TeamMembership.Role.LEADER,
-                )
-            ),
-        )
-        .prefetch_related("members")
-        .order_by("name")
+    User = get_user_model()
+
+    q = request.GET.get("q", "").strip()
+    member = request.GET.get("member", "")
+    membership = request.GET.get("membership", "")
+    sort = request.GET.get("sort", "name")
+
+    teams = Team.objects.annotate(
+        member_count=Count("memberships", distinct=True),
+        user_is_member=Exists(
+            TeamMembership.objects.filter(
+                team=OuterRef("pk"),
+                user=request.user,
+            )
+        ),
+        user_is_leader=Exists(
+            TeamMembership.objects.filter(
+                team=OuterRef("pk"),
+                user=request.user,
+                role=TeamMembership.Role.LEADER,
+            )
+        ),
     )
 
-    return render(request, "teams/team_list.html", {
-        "teams": teams,
-    })
+    if q:
+        teams = teams.filter(name__icontains=q)
+
+    if member:
+        teams = teams.filter(memberships__user_id=member)
+
+    if membership == "mine":
+        teams = teams.filter(memberships__user=request.user)
+    elif membership == "leading":
+        teams = teams.filter(
+            memberships__user=request.user,
+            memberships__role=TeamMembership.Role.LEADER,
+        )
+
+    allowed_sorts = {
+        "name": "name",
+        "-name": "-name",
+        "member_count": "-member_count",
+    }
+
+    teams = teams.prefetch_related("members").order_by(
+        allowed_sorts.get(sort, "name")
+    )
+
+    members = (
+        User.objects.filter(team_memberships__isnull=False)
+        .distinct()
+        .order_by("username")
+    )
+
+    return render(
+        request,
+        "teams/team_list.html",
+        {
+            "teams": teams,
+            "members": members,
+            "selected_q": q,
+            "selected_member": member,
+            "selected_membership": membership,
+            "selected_sort": sort,
+            "return_url": request.get_full_path(),
+        },
+    )
 
 
 @login_required
@@ -42,6 +89,12 @@ def team_manage(request, pk):
         memberships__role=TeamMembership.Role.LEADER,
     )
 
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse("teams:team-list")
+    manage_url = (
+    reverse("teams:team-manage", kwargs={"pk": team.pk})
+    + "?"
+    + urlencode({"next": next_url})
+)
     if request.method == "POST":
         action = request.POST.get("action")
 
@@ -58,7 +111,7 @@ def team_manage(request, pk):
                 )
 
                 messages.success(request, "Member added.")
-                return redirect("teams:team-manage", pk=team.pk)
+                return redirect(manage_url)
 
         elif action == "remove":
             membership = get_object_or_404(
@@ -73,7 +126,7 @@ def team_manage(request, pk):
                 membership.delete()
                 messages.success(request, "Member removed.")
 
-            return redirect("teams:team-manage", pk=team.pk)
+            return redirect(manage_url)
 
     else:
         form = AddTeamMemberForm(team=team)
@@ -87,4 +140,5 @@ def team_manage(request, pk):
         "team": team,
         "memberships": memberships,
         "form": form,
+        "next_url": next_url
     })

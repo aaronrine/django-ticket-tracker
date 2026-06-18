@@ -8,6 +8,48 @@
     </div>
 </div>
 
+<form method="get" class="filters">
+    <div class="filter-field">
+        <label for="q">Search</label>
+        <input id="q" type="search" name="q" value="{{ selected_q }}" placeholder="Team name">
+    </div>
+
+    <div class="filter-field">
+        <label for="member">Member</label>
+        <select id="member" name="member">
+            <option value="">Any member</option>
+            {% for member in members %}
+            <option value="{{ member.id }}" {% if selected_member == member.id|stringformat:"s" %}selected{% endif %}>
+                {{ member.username }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-field">
+        <label for="membership">Membership</label>
+        <select id="membership" name="membership">
+            <option value="" {% if selected_membership == "" %}selected{% endif %}>All teams</option>
+            <option value="mine" {% if selected_membership == "mine" %}selected{% endif %}>My teams</option>
+            <option value="leading" {% if selected_membership == "leading" %}selected{% endif %}>Teams I lead</option>
+        </select>
+    </div>
+
+    <div class="filter-field">
+        <label for="sort">Sort</label>
+        <select id="sort" name="sort">
+            <option value="name" {% if selected_sort == "name" %}selected{% endif %}>Name A-Z</option>
+            <option value="-name" {% if selected_sort == "-name" %}selected{% endif %}>Name Z-A</option>
+            <option value="member_count" {% if selected_sort == "member_count" %}selected{% endif %}>Most members</option>
+        </select>
+    </div>
+
+    <div class="filter-actions">
+        <button type="submit">Apply</button>
+        <a class="button-link" href="{% url 'teams:team-list' %}">Clear</a>
+    </div>
+</form>
+
 <div class="team-grid">
     {% for team in teams %}
     <article class="team-card">
@@ -22,10 +64,12 @@
                 {% else %}
                 <span class="muted">Not a member</span>
                 {% endif %}
+
+                <p class="muted">{{ team.member_count }} member{{ team.member_count|pluralize }}</p>
             </div>
 
             {% if team.user_is_leader %}
-            <a class="button secondary" href="{% url 'teams:team-manage' team.pk %}">
+            <a class="button secondary" href="{% url 'teams:team-manage' team.pk %}?next={{ return_url|urlencode }}">
                 Manage
             </a>
             {% endif %}
@@ -35,9 +79,7 @@
 
         <ul class="member-chip-list">
             {% for member in team.members.all %}
-            <li class="member-chip">
-                {{ member.username }}
-            </li>
+            <li class="member-chip">{{ member.username }}</li>
             {% empty %}
             <li class="muted">No members yet.</li>
             {% endfor %}
@@ -45,8 +87,8 @@
     </article>
     {% empty %}
     <div class="empty-card">
-        <p>No teams exist yet.</p>
-        <p class="muted">Teams can be created in admin for now.</p>
+        <p>No teams match those filters.</p>
+        <p class="muted">Try clearing the filters or creating teams in admin.</p>
     </div>
     {% endfor %}
 </div>

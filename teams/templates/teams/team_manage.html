@@ -7,17 +7,17 @@
         <h1>{{ team.name }}</h1>
     </div>
 
-    <a class="button secondary" href="{% url 'teams:team-list' %}">
+    <a class="button secondary" href="{{ next_url }}">
         Back to teams
     </a>
 </div>
-
 <div class="team-layout">
     <section class="card">
         <h2>Add member</h2>
-
+        
         <form method="post" class="member-form">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next_url }}" >
             <input type="hidden" name="action" value="add">
 
             {{ form.non_field_errors }}
@@ -56,6 +56,7 @@
                         {% if membership.role != "leader" %}
                         <form method="post">
                             {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
                             <input type="hidden" name="action" value="remove">
                             <input type="hidden" name="membership_id" value="{{ membership.id }}">
                             <button class="danger" type="submit">Remove</button>
