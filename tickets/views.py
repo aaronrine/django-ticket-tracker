@@ -9,8 +9,9 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from teams.models import Team
 from django.http import HttpResponseForbidden
+from urllib.parse import urlencode
 
-from teams.permissions import can_view_team_ticket, can_delete_team_ticket, can_change_team_ticket_status, can_create_team_ticket
+from teams.permissions import can_view_team_ticket, can_delete_team_ticket, can_change_team_ticket_status, can_create_team_ticket, can_create_team_subticket
 
 @login_required
 def ticket_list(request):
@@ -145,7 +146,6 @@ def ticket_edit(request, pk):
                 updated_ticket.closed_by = None
 
             updated_ticket.save()
-            form.save_m2m()
 
             return redirect(next_url)
     else:
@@ -185,9 +185,80 @@ def ticket_detail(request, pk):
     if not can_view_team_ticket(request.user, ticket):
         return HttpResponseForbidden("You do not have permission to view this ticket.")
     next_url = request.GET.get("next") or reverse("ticket-list")
+    subtickets = ticket.subtickets.select_related(
+        "assigned_user",
+        "assigned_team",
+    ).order_by("status", "due_date", "title")
 
     return render(
         request,
         "tickets/ticket_detail.html",
-        {"ticket": ticket, "next_url": next_url,},
+        {"ticket": ticket, "next_url": next_url, "subtickets": subtickets,},
+    )
+
+@login_required
+def ticket_subticket_create(request, pk):
+    parent_ticket = get_object_or_404(Ticket, pk=pk)
+
+    if not can_create_team_subticket(request.user, parent_ticket):
+        return HttpResponseForbidden(
+            "You do not have permission to create subtickets for this ticket."
+        )
+
+    next_url = (
+        request.POST.get("next")
+        or request.GET.get("next")
+        or reverse("ticket-detail", kwargs={"pk": parent_ticket.pk})
+    )
+
+    if request.method == "POST":
+        form = TicketForm(request.POST)
+
+        if form.is_valid():
+            ticket = form.save(commit=False)
+            
+            parent_team = parent_ticket.get_permission_team()
+            child_team = ticket.assigned_team
+
+            if parent_team is not None:
+                # This subticket is under an existing team-controlled path.
+
+                if child_team is not None:
+                    # Team-assigned subtickets must stay in the same team path.
+                    if child_team.id != parent_team.id:
+                        return HttpResponseForbidden(
+                            "You cannot assign a subticket to a different team than its parent path."
+                        )
+
+                    # Making a team-wide subticket is leader-only.
+                    if not can_create_team_ticket(request.user, parent_team):
+                        return HttpResponseForbidden(
+                            "Only team leaders can create team-assigned subtickets."
+                        )
+
+            else:
+                # This parent path is not team-controlled yet.
+                # Assigning the child to a team creates a new team-owned branch, so leader-only.
+                if child_team is not None and not can_create_team_ticket(request.user, child_team):
+                    return HttpResponseForbidden(
+                        "Only team leaders can create team-assigned tickets."
+                    )
+            ticket.parent = parent_ticket
+            ticket.opened_by = request.user
+            ticket.save()
+
+            detail_url = reverse("ticket-detail", kwargs={"pk": parent_ticket.pk})
+            return redirect(f"{detail_url}?{urlencode({'next': next_url})}")
+    else:
+        form = TicketForm()
+
+    return render(
+        request,
+        "tickets/ticket_form.html",
+        {
+            "form": form,
+            "next_url": next_url,
+            "page_title": f"New subticket for {parent_ticket.title}",
+            "button_text": "Create subticket",
+        },
     )

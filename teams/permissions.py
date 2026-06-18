@@ -18,10 +18,10 @@ def get_team_role(user, team):
 
 
 def can_view_team_ticket(user, ticket):
-    if ticket.assigned_team is None:
+    if ticket.get_permission_team() is None:
         return True
 
-    role = get_team_role(user, ticket.assigned_team)
+    role = get_team_role(user, ticket.get_permission_team())
 
     return role in {
         TeamMembership.Role.LEADER,
@@ -31,10 +31,10 @@ def can_view_team_ticket(user, ticket):
 
 
 def can_change_team_ticket_status(user, ticket):
-    if ticket.assigned_team is None:
+    if ticket.get_permission_team() is None:
         return True
 
-    role = get_team_role(user, ticket.assigned_team)
+    role = get_team_role(user, ticket.get_permission_team())
 
     return role in {
         TeamMembership.Role.LEADER,
@@ -43,10 +43,10 @@ def can_change_team_ticket_status(user, ticket):
 
 
 def can_delete_team_ticket(user, ticket):
-    if ticket.assigned_team is None:
+    if ticket.get_permission_team() is None:
         return True
 
-    role = get_team_role(user, ticket.assigned_team)
+    role = get_team_role(user, ticket.get_permission_team())
 
     return role == TeamMembership.Role.LEADER
 
@@ -58,10 +58,10 @@ def can_create_team_ticket(user, team):
 
 
 def can_create_team_subticket(user, parent_ticket):
-    if parent_ticket.assigned_team is None:
+    if parent_ticket.get_permission_team() is None:
         return True
 
-    role = get_team_role(user, parent_ticket.assigned_team)
+    role = get_team_role(user, parent_ticket.get_permission_team())
 
     return role in {
         TeamMembership.Role.LEADER,

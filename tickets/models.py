@@ -22,7 +22,13 @@ class Ticket(models.Model):
         choices=Status.choices,
         default=Status.OPEN,
     )
-    
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="subtickets",
+    )
     opened_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -97,3 +103,20 @@ class Ticket(models.Model):
             return False
 
         return self.due_date < timezone.localdate()
+
+    def get_permission_team(self):
+        ticket = self
+        seen_ids = set()
+
+        while ticket is not None:
+            if ticket.pk in seen_ids:
+                return None
+
+            seen_ids.add(ticket.pk)
+
+            if ticket.assigned_team_id is not None:
+                return ticket.assigned_team
+
+            ticket = ticket.parent
+
+        return None
