@@ -8,6 +8,9 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.core.paginator import Paginator
 from teams.models import Team
+from django.http import HttpResponseForbidden
+
+from teams.permissions import can_view_team_ticket
 
 @login_required
 def ticket_list(request):
@@ -172,6 +175,8 @@ def ticket_delete(request, pk):
 @login_required
 def ticket_detail(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
+    if not can_view_team_ticket(request.user, ticket):
+        return HttpResponseForbidden("You do not have permission to view this ticket.")
     next_url = request.GET.get("next") or reverse("ticket-list")
 
     return render(
