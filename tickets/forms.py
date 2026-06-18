@@ -6,7 +6,8 @@ from django.contrib.auth import get_user_model
 
 class TicketForm(forms.ModelForm):
     due_date = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date"}),
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d",),
+        input_formats=["%Y-%m-%d"],
     )
     class Meta:
         model = Ticket
