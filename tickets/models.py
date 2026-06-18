@@ -15,7 +15,7 @@ class Ticket(models.Model):
     
 
     title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
+    description = models.TextField()
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -26,13 +26,12 @@ class Ticket(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True,
+        blank=False,
         related_name="opened_tickets",
     )
 
     assignees = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        blank=True,
         related_name="assigned_tickets",
     )
 
@@ -50,10 +49,7 @@ class Ticket(models.Model):
         choices=Priority.choices,
         default=Priority.MEDIUM,
     )
-    due_date = models.DateField(
-        null=True,
-        blank=True,
-    )
+    due_date = models.DateField()
 
     def __str__(self):
         return self.title
