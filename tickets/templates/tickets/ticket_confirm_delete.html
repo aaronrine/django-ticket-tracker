@@ -9,10 +9,11 @@
 
 <form method="post">
     {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next_url }}">
     <button class="danger-button" type="submit">Yes, delete</button>
 </form>
 
 <p>
-    <a href="{% url 'ticket-list' %}">Cancel</a>
+    <a href="{{ next_url }}">Cancel</a>
 </p>
 {% endblock %}

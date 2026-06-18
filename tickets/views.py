@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
-
+from django.urls import reverse
 from .forms import TicketForm
 from .models import Ticket
 from django.utils import timezone
@@ -70,27 +70,28 @@ def ticket_list(request):
             "selected_priority": priority,
             "selected_overdue": overdue,
             "assignees": User.objects.all().order_by("username"),
-            "selected_assignees": assignee,
+            "selected_assignee": assignee,
             "search_query": q,
             "selected_sort": sort,
             "query_params": query_params.urlencode(),
+            "return_url": request.get_full_path(),
         },
     )
 
 @login_required
 def ticket_create(request):
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse("ticket-list")
     if request.method == "POST":
         form = TicketForm(request.POST)
 
         if form.is_valid():
             ticket = form.save(commit=False)
-
-        if request.user.is_authenticated:
             ticket.opened_by = request.user
+            ticket.save()
+            form.save_m2m()
+            return redirect(next_url)
 
-        ticket.save()
-        form.save_m2m()
-        return redirect("ticket-list")
+
     else:
         form = TicketForm()
 
@@ -101,6 +102,7 @@ def ticket_create(request):
             "form": form,
             "page_title": "New Ticket",
             "button_text": "Create Ticket",
+            "next_url": next_url,
         },
     )
 
@@ -108,6 +110,7 @@ def ticket_create(request):
 def ticket_edit(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
     old_status = ticket.status
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse("ticket-list")
 
     if request.method == "POST":
         form = TicketForm(request.POST, instance=ticket)
@@ -130,7 +133,7 @@ def ticket_edit(request, pk):
             updated_ticket.save()
             form.save_m2m()
 
-            return redirect("ticket-list")
+            return redirect(next_url)
     else:
         form = TicketForm(instance=ticket)
 
@@ -141,29 +144,32 @@ def ticket_edit(request, pk):
             "form": form,
             "page_title": "Edit Ticket",
             "button_text": "Save Changes",
+            "next_url": next_url,
         },
     )
 
 @login_required
 def ticket_delete(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse("ticket-list")
 
     if request.method == "POST":
         ticket.delete()
-        return redirect("ticket-list")
+        return redirect(next_url)
 
     return render(
         request,
         "tickets/ticket_confirm_delete.html",
-        {"ticket": ticket},
+        {"ticket": ticket, "next_url": next_url,},
     )
 
 @login_required
 def ticket_detail(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
+    next_url = request.GET.get("next") or reverse("ticket-list")
 
     return render(
         request,
         "tickets/ticket_detail.html",
-        {"ticket": ticket},
+        {"ticket": ticket, "next_url": next_url,},
     )

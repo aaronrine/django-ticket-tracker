@@ -5,7 +5,7 @@
 {% block content %}
 <h2>Tickets</h2>
     <p>
-        <a class="button-link" href="{% url 'ticket-create' %}">New Ticket</a>
+        <a class="button-link" href="{% url 'ticket-create' %}?next={{ return_url|urlencode }}">New Ticket</a>
     </p>
     <form method="get" class="filters">
         <div class="filter-field">
@@ -113,7 +113,7 @@
             {% for ticket in tickets %}
             <tr>
                 <td>
-                    <a href="{% url 'ticket-detail' ticket.pk %}">
+                    <a href="{% url 'ticket-detail' ticket.pk %}?next={{ return_url|urlencode }}">
                     <strong>{{ ticket.title }}</strong>
                     </a>
     
@@ -163,8 +163,8 @@
     
                 <td>
                     <div class="table-actions">
-                        <a class="button-link" href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
-                        <a class="danger-link" href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
+                        <a class="button-link" href="{% url 'ticket-edit' ticket.pk %}?next={{ return_url|urlencode }}">Edit</a>
+                        <a class="danger-link" href="{% url 'ticket-delete' ticket.pk %}?next={{ return_url|urlencode }}">Delete</a>
                     </div>
                 </td>
             </tr>

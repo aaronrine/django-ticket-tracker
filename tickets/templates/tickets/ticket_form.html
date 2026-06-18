@@ -7,12 +7,13 @@
 
 <form method="post">
     {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next_url }}"
     {{ form.as_p }}
 
     <button type="submit">{{ button_text }}</button>
 </form>
 
 <p>
-    <a href="{% url 'ticket-list' %}">Back to tickets</a>
+    <a href="{{ next_url }}">Back to tickets</a>
 </p>
 {% endblock %}

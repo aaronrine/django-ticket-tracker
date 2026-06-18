@@ -10,8 +10,8 @@
     </div>
 
     <div class="table-actions">
-        <a class="button-link" href="{% url 'ticket-edit' ticket.pk %}">Edit</a>
-        <a class="danger-link" href="{% url 'ticket-delete' ticket.pk %}">Delete</a>
+        <a class="button-link" href="{% url 'ticket-edit' ticket.pk %}?next={{ next_url|urlencode }}">Edit</a>
+        <a class="danger-link" href="{% url 'ticket-delete' ticket.pk %}?next={{ next_url|urlencode }}">Delete</a>
     </div>
 </div>
 
@@ -103,6 +103,6 @@
 </section>
 
 <p>
-    <a href="{% url 'ticket-list' %}">Back to tickets</a>
+    <a href="{{ next_url }}">Back to tickets</a>
 </p>
 {% endblock %}
