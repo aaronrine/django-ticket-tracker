@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     
     "tickets.apps.TicketsConfig",
     "profiles.apps.ProfilesConfig",
+    "teams.apps.TeamsConfig",
 ]
 
 MIDDLEWARE = [

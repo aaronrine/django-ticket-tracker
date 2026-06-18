@@ -37,12 +37,20 @@
         <div class="filter-field">
             <label for="assignee">Assignee</label>
         
-            <select name="assignee" id="assignee">
-                <option value="">All assignees</option>
-        
-                {% for user in assignees %}
-                <option value="{{ user.id }}" {% if selected_assignee == user.id|stringformat:"s" %}selected{% endif %}>
+            <select name="assigned_user">
+                <option value="">Any user</option>
+                {% for user in assigned_users %}
+                <option value="{{ user.id }}" {% if selected_assigned_user == user.id|stringformat:"s" %}selected{% endif %}>
                     {{ user.username }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <select name="assigned_team">
+                <option value="">Any team</option>
+                {% for team in assigned_teams %}
+                <option value="{{ team.id }}" {% if selected_assigned_team == team.id|stringformat:"s" %}selected{% endif %}>
+                    {{ team.name }}
                 </option>
                 {% endfor %}
             </select>
@@ -102,7 +110,7 @@
                 <th>Due</th>
                 <th>Created</th>
                 <th>Updated</th>
-                <th>Assignees</th>
+                <th>Assignee</th>
                 <th>Opened by</th>
                 <th>Closed by</th>
                 <th>Actions</th>
@@ -138,11 +146,11 @@
                 <td>{{ ticket.updated_at|date:"M j, Y g:i A" }}</td>
     
                 <td>
-                    {% for user in ticket.assignees.all %}
-                    {{ user.username }}{% if not forloop.last %}, {% endif %}
-                    {% empty %}
-                    none
-                    {% endfor %}
+                    {% if ticket.assigned_user %}
+                        {{ ticket.assigned_user.username }}
+                    {% elif ticket.assigned_team %}
+                        {{ ticket.assigned_team.name }}
+                    {% endif %}
                 </td>
     
                 <td>

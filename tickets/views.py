@@ -7,13 +7,15 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.core.paginator import Paginator
+from teams.models import Team
 
 @login_required
 def ticket_list(request):
     status = request.GET.get("status")
     priority = request.GET.get("priority")
     overdue = request.GET.get("overdue")
-    assignee = request.GET.get("assignee")
+    assigned_user = request.GET.get("assigned_user")
+    assigned_team = request.GET.get("assigned_team")
     q = request.GET.get("q")
     sort = request.GET.get("sort", "due_date")
 
@@ -32,8 +34,10 @@ def ticket_list(request):
         ).exclude(
             status=Ticket.Status.CLOSED
         )
-    if assignee:
-        tickets = tickets.filter(assignees__id=assignee)
+    if assigned_user:
+        tickets = tickets.filter(assigned_user__id=assigned_user)
+    if assigned_team:
+        tickets = tickets.filter(assigned_team__id=assigned_team)
     if q:
         tickets = tickets.filter(
             Q(title__icontains=q) | Q(description__icontains=q)
@@ -69,8 +73,10 @@ def ticket_list(request):
             "priority_choices": Ticket.Priority.choices,
             "selected_priority": priority,
             "selected_overdue": overdue,
-            "assignees": User.objects.all().order_by("username"),
-            "selected_assignee": assignee,
+            "assigned_users": User.objects.all().order_by("username"),
+            "assigned_teams": Team.objects.all().order_by("name"),
+            "selected_assigned_user": assigned_user,
+            "selected_assigned_team": assigned_team,
             "search_query": q,
             "selected_sort": sort,
             "query_params": query_params.urlencode(),

@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -30,8 +31,19 @@ class Ticket(models.Model):
         related_name="opened_tickets",
     )
 
-    assignees = models.ManyToManyField(
+    assigned_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="assigned_tickets",
+    )
+
+    assigned_team = models.ForeignKey(
+        "teams.Team",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
         related_name="assigned_tickets",
     )
 
@@ -50,6 +62,28 @@ class Ticket(models.Model):
         default=Priority.MEDIUM,
     )
     due_date = models.DateField()
+
+    def clean(self):
+        super().clean()
+
+        has_user = self.assigned_user is not None
+        has_team = self.assigned_team is not None
+
+        if has_user == has_team:
+            raise ValidationError(
+                "A ticket must be assigned to exactly one user or one team."
+            )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(assigned_user__isnull=False, assigned_team__isnull=True)
+                    | Q(assigned_user__isnull=True, assigned_team__isnull=False)
+                ),
+                name="ticket_exactly_one_assignment",
+            )
+        ]
 
     def __str__(self):
         return self.title
