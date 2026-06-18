@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Count, Exists, OuterRef
-from .forms import AddTeamMemberForm
+from .forms import AddTeamMemberForm, ChangeTeamMemberRoleForm
 from django.contrib.auth import get_user_model
 from .models import Team, TeamMembership
 from django.urls import reverse
@@ -118,7 +118,7 @@ def team_manage(request, pk):
                 TeamMembership.objects.create(
                     team=team,
                     user=user,
-                    role=TeamMembership.Role.MEMBER,
+                    role=TeamMembership.Role.NORMAL,
                 )
 
                 messages.success(request, "Member added.")
@@ -136,6 +136,25 @@ def team_manage(request, pk):
             else:
                 membership.delete()
                 messages.success(request, "Member removed.")
+
+            return redirect(manage_url)
+        elif action == "change_role":
+            membership = get_object_or_404(
+                TeamMembership,
+                pk=request.POST.get("membership_id"),
+                team=team,
+            )
+
+            if membership.role == TeamMembership.Role.LEADER:
+                messages.error(request, "You cannot change the leader role here.")
+                return redirect(manage_url)
+
+            form = ChangeTeamMemberRoleForm(request.POST)
+
+            if form.is_valid():
+                membership.role = form.cleaned_data["role"]
+                membership.save()
+                messages.success(request, "Member role updated.")
 
             return redirect(manage_url)
 

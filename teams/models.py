@@ -21,8 +21,10 @@ class Team(models.Model):
 
 class TeamMembership(models.Model):
     class Role(models.TextChoices):
-        MEMBER = "member", "Member"
         LEADER = "leader", "Leader"
+        NORMAL = "member", "Normal"
+        READ_ONLY = "read_only", "Read_Only"
+        RESTRICTED = "restricted", "Restricted"
 
     team = models.ForeignKey(
         Team,
@@ -39,7 +41,7 @@ class TeamMembership(models.Model):
     role = models.CharField(
         max_length=20,
         choices=Role.choices,
-        default=Role.MEMBER,
+        default=Role.NORMAL,
     )
 
     class Meta:

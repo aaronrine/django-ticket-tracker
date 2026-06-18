@@ -258,3 +258,9 @@ button:hover {
     text-align: right;
     white-space: nowrap;
 }
+
+.inline-form {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+}

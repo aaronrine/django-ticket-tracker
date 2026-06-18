@@ -24,3 +24,13 @@ class AddTeamMemberForm(forms.Form):
             )
 
         self.fields["user"].queryset = queryset
+
+class ChangeTeamMemberRoleForm(forms.Form):
+    role = forms.ChoiceField(
+        choices=[
+            (TeamMembership.Role.NORMAL, "Normal"),
+            (TeamMembership.Role.READ_ONLY, "Read-only"),
+            (TeamMembership.Role.RESTRICTED, "Restricted"),
+        ],
+        required=True,
+    )

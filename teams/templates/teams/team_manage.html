@@ -48,9 +48,27 @@
                 <tr>
                     <td>{{ membership.user.username }}</td>
                     <td>
+                        {% if membership.role == "leader" %}
                         <span class="role-pill role-{{ membership.role }}">
                             {{ membership.get_role_display }}
                         </span>
+                        {% else %}
+                        <form method="post" class="inline-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ next_url }}">
+                            <input type="hidden" name="member_page" value="{{ member_page_obj.number }}">
+                            <input type="hidden" name="action" value="change_role">
+                            <input type="hidden" name="membership_id" value="{{ membership.id }}">
+                        
+                            <select name="role">
+                                <option value="member" {% if membership.role == "member" %}selected{% endif %}>Normal</option>
+                                <option value="read_only" {% if membership.role == "read_only" %}selected{% endif %}>Read-only</option>
+                                <option value="restricted" {% if membership.role == "restricted" %}selected{% endif %}>Restricted</option>
+                            </select>
+                        
+                            <button type="submit">Save</button>
+                        </form>
+                        {% endif %}
                     </td>
                     <td class="actions-column">
                         {% if membership.role != "leader" %}
