@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 from teams.models import Team
 from django.http import HttpResponseForbidden
 from urllib.parse import urlencode
+from django.contrib import messages
 
 from teams.permissions import can_view_team_ticket, can_delete_team_ticket, can_change_team_ticket_status, can_create_team_ticket, can_create_team_subticket
 
@@ -102,6 +103,7 @@ def ticket_create(request):
                     "You do not have permission to create tickets for this team."
                 )
             ticket.save()
+            messages.success(request, "Ticket created.")
             return redirect(next_url)
 
 
@@ -146,7 +148,7 @@ def ticket_edit(request, pk):
                 updated_ticket.closed_by = None
 
             updated_ticket.save()
-
+            messages.success(request, "Ticket saved.")
             return redirect(next_url)
     else:
         form = TicketForm(instance=ticket)
@@ -171,6 +173,7 @@ def ticket_delete(request, pk):
 
     if request.method == "POST":
         ticket.delete()
+        messages.success(request, "Ticket deleted.")
         return redirect(next_url)
 
     return render(
@@ -246,7 +249,7 @@ def ticket_subticket_create(request, pk):
             ticket.parent = parent_ticket
             ticket.opened_by = request.user
             ticket.save()
-
+            messages.success(request, "Ticket created.")
             detail_url = reverse("ticket-detail", kwargs={"pk": parent_ticket.pk})
             return redirect(f"{detail_url}?{urlencode({'next': next_url})}")
     else:

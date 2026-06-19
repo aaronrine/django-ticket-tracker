@@ -376,3 +376,48 @@ button:hover {
     margin-top: 0.5rem;
     align-items: center;
 }
+
+/* Toasts */
+
+.toast-region {
+    position: fixed;
+    right: 1.5rem;
+    top: 1.5rem;
+    z-index: 1000;
+    display: grid;
+    gap: 0.75rem;
+    max-width: min(24rem, calc(100vw - 3rem));
+}
+
+.toast {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    border-left: 0.4rem solid #555;
+    border-radius: 0.5rem;
+    background: #fff;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+    transition:
+        opacity 180ms ease,
+        transform 180ms ease;
+}
+
+.toast-exiting {
+    opacity: 0;
+    transform: translateY(0.5rem);
+}
+
+.toast-success {
+    border-left-color: #188038;
+}
+
+.toast-error {
+    border-left-color: #d93025;
+}
+
+.toast-warning {
+    border-left-color: #f9ab00;
+}
+
+.toast-info {
+    border-left-color: #1a73e8;
+}

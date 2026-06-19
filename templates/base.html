@@ -33,6 +33,41 @@
         {% block content %}
         {% endblock %}
     </main>
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+    
+    <script>
+        function showToast(message, type = "info") {
+            const region = document.getElementById("toast-region");
+
+            const toast = document.createElement("div");
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+
+            region.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add("toast-exiting");
+                toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+            }, 3500);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".toast").forEach((toast) => {
+                setTimeout(() => {
+                    toast.classList.add("toast-exiting");
+                    toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+                }, 3500);
+            });
+        });
+    </script>
 </body>
 
 </html>
