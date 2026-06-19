@@ -92,9 +92,9 @@ class Ticket(models.Model):
             raise ValidationError(
                 "A ticket must be assigned to exactly one user or one team."
             )
-        if self.actual_minutes is not None and self.status != self.Status.CLOSED:
+        if self.actual_time is not None and self.status != self.Status.CLOSED:
             raise ValidationError({
-                "actual_minutes": "Actual time can only be set when the ticket is closed."
+                "actual_time": "Actual time can only be set when the ticket is closed."
             })
 
     class Meta:
