@@ -12,7 +12,7 @@ from django.http import HttpResponseForbidden
 from urllib.parse import urlencode
 from django.contrib import messages
 import json
-
+from .services import update_ticket_status
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
@@ -137,22 +137,41 @@ def ticket_edit(request, pk):
         if form.is_valid():
             updated_ticket = form.save(commit=False)
 
-            if (
-                old_status != Ticket.Status.CLOSED
-                and updated_ticket.status == Ticket.Status.CLOSED
-            ):
-                updated_ticket.closed_by = request.user
+            try:
+                update_ticket_status(
+                    ticket=updated_ticket,
+                    user=request.user,
+                    new_status=updated_ticket.status,
+                    actual_time=updated_ticket.actual_time,
+                    old_status=old_status,
+                )
+            except ValidationError as error:
+                toast_message = "Ticket could not be saved."
 
-            if (
-                old_status == Ticket.Status.CLOSED
-                and updated_ticket.status != Ticket.Status.CLOSED
-            ):
-                updated_ticket.closed_by = None
+                if hasattr(error, "message_dict"):
+                    for field, messages_for_field in error.message_dict.items():
+                        form_field = field if field in form.fields else None
 
-            updated_ticket.save()
-            messages.success(request, "Ticket saved.")
-            return redirect(next_url)
+                        for message in messages_for_field:
+                            form.add_error(form_field, message)
+
+                        if messages_for_field:
+                            toast_message = messages_for_field[0]
+                else:
+                    for message in error.messages:
+                        form.add_error(None, message)
+
+                    if error.messages:
+                        toast_message = error.messages[0]
+
+                messages.error(request, toast_message)
+            else:
+                messages.success(request, "Ticket saved.")
+                return redirect(next_url)
+        else:
+            messages.error(request, "Ticket could not be saved. Please check the form.")
     else:
+        
         form = TicketForm(instance=ticket)
 
     return render(
@@ -308,48 +327,33 @@ def ticket_status_update(request, pk):
             status=400,
         )
 
-    old_status = ticket.status
-    ticket.status = new_status
-
-    if new_status == Ticket.Status.CLOSED:
-        ticket.closed_by = request.user
-
-        if actual_time in ("", None):
-            return JsonResponse(
-                {"ok": False, "message": "Actual time is required when closing a ticket."},
-                status=400,
-            )
-
-        try:
-            ticket.actual_time = int(actual_time)
-        except (TypeError, ValueError):
-            return JsonResponse(
-                {"ok": False, "message": "Actual time must be a number of minutes."},
-                status=400,
-            )
-    else:
-        ticket.closed_by = None
-        ticket.actual_time = None
-
     try:
-        ticket.full_clean()
-    except ValidationError as error:
-        if hasattr(error, "message_dict"):
+        old_status, ticket = update_ticket_status(
+            ticket=ticket,
+            user=request.user,
+            new_status=new_status,
+            actual_time=actual_time,
+        )
+    except (ValidationError, TypeError, ValueError) as error:
+        if isinstance(error, ValidationError) and hasattr(error, "message_dict"):
             first_messages = next(iter(error.message_dict.values()))
             message = first_messages[0] if first_messages else "Ticket could not be updated."
-        else:
+            errors = error.message_dict
+        elif isinstance(error, ValidationError):
             message = error.messages[0] if error.messages else "Ticket could not be updated."
+            errors = {}
+        else:
+            message = "Actual time must be a number of minutes."
+            errors = {}
 
         return JsonResponse(
             {
                 "ok": False,
                 "message": message,
-                "errors": getattr(error, "message_dict", {}),
+                "errors": errors,
             },
             status=400,
         )
-
-    ticket.save()
 
     return JsonResponse({
         "ok": True,
