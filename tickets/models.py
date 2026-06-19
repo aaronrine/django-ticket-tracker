@@ -70,8 +70,6 @@ class Ticket(models.Model):
     )
     due_date = models.DateField()
     estimated_time = models.PositiveIntegerField(
-        null=True,
-        blank=True,
         validators=[MinValueValidator(1)],
         help_text="Estimated time to complete, in minutes.",
     )
