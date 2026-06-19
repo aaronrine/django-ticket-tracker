@@ -282,32 +282,24 @@ button:hover {
     margin-top: 1rem;
 }
 
-.subticket-list {
-    display: grid;
-    gap: 0.75rem;
-    padding: 0;
-    margin: 0;
-    list-style: none;
+/* Priority colors */
+
+.ticket-row.priority-high,
+.subticket-item.priority-high {
+    --priority-color: #d93025;
 }
 
-.subticket-item {
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: #f8f8f8;
+.ticket-row.priority-medium,
+.subticket-item.priority-medium {
+    --priority-color: #f9ab00;
 }
 
-.subticket-title {
-    font-weight: 700;
+.ticket-row.priority-low,
+.subticket-item.priority-low {
+    --priority-color: #5f9ea0;
 }
 
-.subticket-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
-    align-items: center;
-}
+/* Ticket list */
 
 .ticket-list-table tbody tr:nth-child(even) {
     background-color: #eef5fb;
@@ -330,16 +322,57 @@ button:hover {
     bottom: 0.45rem;
     width: 0.35rem;
     border-radius: 999px;
+    background-color: var(--priority-color);
 }
 
-.ticket-list-table tbody tr.priority-high td:first-child::before {
-    background-color: #d93025;
+/* Subticket tree */
+
+.subticket-list {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
 }
 
-.ticket-list-table tbody tr.priority-medium td:first-child::before {
-    background-color: #f9ab00;
+.subticket-list .subticket-list {
+    margin-top: 0.75rem;
+    margin-left: 1rem;
+    padding-left: 1rem;
+    border-left: 1px solid #ddd;
 }
 
-.ticket-list-table tbody tr.priority-low td:first-child::before {
-    background-color: #5f9ea0;
+.subticket-node {
+    list-style: none;
+}
+
+.subticket-item {
+    position: relative;
+    padding: 0.75rem 0.75rem 0.75rem 1.5rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #f8f8f8;
+}
+
+.subticket-item::before {
+    content: "";
+    position: absolute;
+    left: 0.45rem;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 0.35rem;
+    border-radius: 999px;
+    background-color: var(--priority-color);
+}
+
+.subticket-title {
+    font-weight: 700;
+}
+
+.subticket-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    align-items: center;
 }

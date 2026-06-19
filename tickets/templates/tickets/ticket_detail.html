@@ -132,35 +132,8 @@
             New subticket
         </a>
     </div>
-
-    <ul class="subticket-list">
-        {% for subticket in subtickets %}
-        <li class="subticket-item">
-            <div>
-                <a class="subticket-title" href="{% url 'ticket-detail' subticket.pk %}?next={{ next_url|urlencode }}">
-                    {{ subticket.title }}
-                </a>
-
-                <div class="subticket-meta">
-                    <span class="pill">{{ subticket.get_status_display }}</span>
-                    <span class="pill">{{ subticket.get_priority_display }}</span>
-
-                    {% if subticket.assigned_user %}
-                    <span class="pill">User: {{ subticket.assigned_user.username }}</span>
-                    {% elif subticket.assigned_team %}
-                    <span class="pill">Team: {{ subticket.assigned_team.name }}</span>
-                    {% endif %}
-
-                    {% if subticket.due_date %}
-                    <span class="muted">Due {{ subticket.due_date }}</span>
-                    {% endif %}
-                </div>
-            </div>
-        </li>
-        {% empty %}
-        <li class="muted">No subtickets yet.</li>
-        {% endfor %}
-    </ul>
+    {% include "tickets/_subticket_list.html" with subtickets=subtickets next_url=next_url only %}
+    
 </section>
 <p>
     <a href="{{ next_url }}">Back to tickets</a>
