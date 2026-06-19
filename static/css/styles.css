@@ -37,7 +37,7 @@ td {
 }
 
 th {
-    background: #f0f0f0;
+    background: #b1b1b1;
 }
 
 td {
@@ -307,4 +307,39 @@ button:hover {
     gap: 0.4rem;
     margin-top: 0.5rem;
     align-items: center;
+}
+
+.ticket-list-table tbody tr:nth-child(even) {
+    background-color: #eef5fb;
+}
+
+.ticket-list-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.ticket-list-table tbody td:first-child {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.ticket-list-table tbody td:first-child::before {
+    content: "";
+    position: absolute;
+    left: 0.45rem;
+    top: 0.45rem;
+    bottom: 0.45rem;
+    width: 0.35rem;
+    border-radius: 999px;
+}
+
+.ticket-list-table tbody tr.priority-high td:first-child::before {
+    background-color: #d93025;
+}
+
+.ticket-list-table tbody tr.priority-medium td:first-child::before {
+    background-color: #f9ab00;
+}
+
+.ticket-list-table tbody tr.priority-low td:first-child::before {
+    background-color: #5f9ea0;
 }

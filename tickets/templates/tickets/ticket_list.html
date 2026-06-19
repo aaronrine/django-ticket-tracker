@@ -101,12 +101,11 @@
     <p>{{ tickets|length }} ticket{{ tickets|length|pluralize }} found</p>
     {% if tickets %}
     
-    <table border="1" cellpadding="6">
+    <table border="1" cellpadding="6" class="ticket-list-table">
         <thead>
             <tr>
                 <th>Title</th>
                 <th>Status</th>
-                <th>Priority</th>
                 <th>Due</th>
                 <th>Assignee</th>
             </tr>
@@ -114,7 +113,7 @@
     
         <tbody>
             {% for ticket in tickets %}
-            <tr>
+            <tr class="ticket-row priority-{{ ticket.priority|lower }}" title="Priority: {{ ticket.get_priority_display }}">
                 <td>
                     <a href="{% url 'ticket-detail' ticket.pk %}?next={{ return_url|urlencode }}">
                     <strong>{{ ticket.title }}</strong>
@@ -128,7 +127,6 @@
     
                 <td>{{ ticket.get_status_display }}</td>
     
-                <td>{{ ticket.get_priority_display }}</td>
     
                 <td>
                     {% if ticket.due_date %}
@@ -137,7 +135,6 @@
                     No due date
                     {% endif %}
                 </td>
-    
                 <td>
                     {% if ticket.assigned_user %}
                         {{ ticket.assigned_user.username }}
@@ -145,8 +142,6 @@
                         {{ ticket.assigned_team.name }}
                     {% endif %}
                 </td>
-    
-    
             </tr>
             
             {% endfor %}
