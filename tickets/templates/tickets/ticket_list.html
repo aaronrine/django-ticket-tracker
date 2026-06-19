@@ -108,12 +108,7 @@
                 <th>Status</th>
                 <th>Priority</th>
                 <th>Due</th>
-                <th>Created</th>
-                <th>Updated</th>
                 <th>Assignee</th>
-                <th>Opened by</th>
-                <th>Closed by</th>
-                <th>Actions</th>
             </tr>
         </thead>
     
@@ -142,8 +137,6 @@
                     No due date
                     {% endif %}
                 </td>
-                <td>{{ ticket.created_at|date:"M j, Y g:i A" }}</td>
-                <td>{{ ticket.updated_at|date:"M j, Y g:i A" }}</td>
     
                 <td>
                     {% if ticket.assigned_user %}
@@ -153,28 +146,7 @@
                     {% endif %}
                 </td>
     
-                <td>
-                    {% if ticket.opened_by %}
-                    {{ ticket.opened_by.username }}
-                    {% else %}
-                    unknown
-                    {% endif %}
-                </td>
     
-                <td>
-                    {% if ticket.closed_by %}
-                    {{ ticket.closed_by.username }}
-                    {% else %}
-                    not closed
-                    {% endif %}
-                </td>
-    
-                <td>
-                    <div class="table-actions">
-                        <a class="button-link" href="{% url 'ticket-edit' ticket.pk %}?next={{ return_url|urlencode }}">Edit</a>
-                        <a class="danger-link" href="{% url 'ticket-delete' ticket.pk %}?next={{ return_url|urlencode }}">Delete</a>
-                    </div>
-                </td>
             </tr>
             
             {% endfor %}
