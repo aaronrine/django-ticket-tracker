@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
+from teams.models import Team
 
 
 class Ticket(models.Model):
@@ -83,13 +85,6 @@ class Ticket(models.Model):
     def clean(self):
         super().clean()
 
-        has_user = self.assigned_user is not None
-        has_team = self.assigned_team is not None
-
-        if has_user == has_team:
-            raise ValidationError(
-                "A ticket must be assigned to exactly one user or one team."
-            )
         if self.status == self.Status.CLOSED and self.actual_time is None:
             raise ValidationError({
                 "actual_time": "Actual time is required when closing a ticket."
@@ -98,6 +93,15 @@ class Ticket(models.Model):
         if self.status != self.Status.CLOSED and self.actual_time is not None:
             raise ValidationError({
                 "actual_time": "Actual time can only be set when the ticket is closed."
+            })
+
+        if (
+            self.status == self.Status.CLOSED
+            and self.requires_reference_on_close()
+            and not self.has_references()
+        ):
+            raise ValidationError({
+                "status": "This team's policy requires at least one reference before closing this ticket."
             })
     class Meta:
         constraints = [
@@ -139,6 +143,30 @@ class Ticket(models.Model):
             ticket = ticket.parent
 
         return None
+
+    def get_ticket_policy(self):
+        team = self.get_permission_team()
+
+        if team is None:
+            return None
+
+        try:
+            return team.ticket_policy
+        except TeamTicketPolicy.DoesNotExist:
+            return None
+
+
+    def requires_reference_on_close(self):
+        policy = self.get_ticket_policy()
+
+        return bool(policy and policy.require_reference_on_close)
+
+
+    def has_references(self):
+        if not self.pk:
+            return False
+
+        return self.references.exists()
     
     @property
     def estimated_time_display(self):
@@ -174,3 +202,76 @@ def format_minutes(minutes):
     if days:
         return f"{weeks} week {days} day"
     return f"{weeks} week"
+
+class TicketReference(models.Model):
+    class Kind(models.TextChoices):
+        COMMIT = "commit", "Commit"
+        PULL_REQUEST = "pull_request", "Pull Request"
+        MERGE_REQUEST = "merge_request", "Merge Request"
+        CHANGESET = "changeset", "Changeset"
+        CUSTOM = "custom", "Custom"
+
+    class Provider(models.TextChoices):
+        MANUAL = "manual", "Manual"
+        GITHUB = "github", "GitHub"
+        GITLAB = "gitlab", "GitLab"
+        BITBUCKET = "bitbucket", "Bitbucket"
+        AZURE_DEVOPS = "azure_devops", "Azure DevOps"
+        CUSTOM = "custom", "Custom"
+
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.CASCADE,
+        related_name="references",
+    )
+
+    kind = models.CharField(
+        max_length=32,
+        choices=Kind.choices,
+        default=Kind.COMMIT,
+    )
+
+    provider = models.CharField(
+        max_length=32,
+        choices=Provider.choices,
+        default=Provider.MANUAL,
+    )
+
+    external_id = models.CharField(
+        max_length=255,
+        help_text="Commit hash, PR number, changelist ID, or external reference ID.",
+    )
+
+    url = models.URLField(blank=True)
+
+    title = models.CharField(
+        max_length=255,
+        blank=True,
+    )
+
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_kind_display()} {self.external_id}"
+
+class TeamTicketPolicy(models.Model):
+    team = models.OneToOneField(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="ticket_policy",
+    )
+
+    require_reference_on_close = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Ticket policy for {self.team.name}"
+
+

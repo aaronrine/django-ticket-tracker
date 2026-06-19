@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Ticket
+from .models import Ticket, TicketReference
 from django.contrib.auth import get_user_model
 from teams.models import Team
 
@@ -58,3 +58,14 @@ class TicketForm(forms.ModelForm):
             )
 
         return cleaned_data
+
+class TicketReferenceForm(forms.ModelForm):
+    class Meta:
+        model = TicketReference
+        fields = [
+            "kind",
+            "provider",
+            "external_id",
+            "url",
+            "title",
+        ]

@@ -113,6 +113,46 @@
         </div>
     </dl>
 </section>
+<section class="card ticket-references-card">
+    <div class="section-header">
+        <div>
+            <h2>References</h2>
+            <p class="muted">Commits, pull requests, changelists, or external work references.</p>
+        </div>
+        <a class="button-link" href="{% url 'ticket-reference-create' ticket.pk %}?next={{ request.get_full_path|urlencode }}">
+            Add reference
+        </a>
+    </div>
+
+    {% if references %}
+    <ul class="reference-list">
+        {% for reference in references %}
+        <li class="reference-item">
+            <div>
+                <strong>{{ reference.get_kind_display }}</strong>
+                <span class="muted">via {{ reference.get_provider_display }}</span>
+            </div>
+
+            <div>
+                {% if reference.url %}
+                <a href="{{ reference.url }}" target="_blank" rel="noopener noreferrer">
+                    {{ reference.external_id }}
+                </a>
+                {% else %}
+                {{ reference.external_id }}
+                {% endif %}
+            </div>
+
+            {% if reference.title %}
+            <div class="muted">{{ reference.title }}</div>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No references linked yet.</p>
+    {% endif %}
+</section>
 <section class="detail-card subtickets-card">
     <div class="section-header">
         <div>

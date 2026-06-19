@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Add Reference{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Ticket Reference</p>
+        <h1>Add reference</h1>
+        <p class="muted">{{ ticket.title }}</p>
+    </div>
+</div>
+
+<form method="post" class="card member-form">
+    {% csrf_token %}
+
+    <input type="hidden" name="next" value="{{ next_url }}">
+
+    {{ form.as_p }}
+
+    <div class="table-actions">
+        <button type="submit">Add reference</button>
+        <a class="button secondary" href="{{ next_url }}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

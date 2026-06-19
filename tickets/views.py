@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
-from .forms import TicketForm
+from .forms import TicketForm, TicketReferenceForm
 from .models import Ticket
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -187,18 +187,28 @@ def ticket_delete(request, pk):
 @login_required
 def ticket_detail(request, pk):
     ticket = get_object_or_404(Ticket, pk=pk)
+
     if not can_view_team_ticket(request.user, ticket):
         return HttpResponseForbidden("You do not have permission to view this ticket.")
+
     next_url = request.GET.get("next") or reverse("ticket-list")
+
     subtickets = ticket.subtickets.select_related(
         "assigned_user",
         "assigned_team",
     ).order_by("status", "due_date", "title")
 
+    references = ticket.references.order_by("-created_at")
+
     return render(
         request,
         "tickets/ticket_detail.html",
-        {"ticket": ticket, "next_url": next_url, "subtickets": subtickets,},
+        {
+            "ticket": ticket,
+            "next_url": next_url,
+            "subtickets": subtickets,
+            "references": references,
+        },
     )
 
 @login_required
@@ -324,11 +334,17 @@ def ticket_status_update(request, pk):
     try:
         ticket.full_clean()
     except ValidationError as error:
+        if hasattr(error, "message_dict"):
+            first_messages = next(iter(error.message_dict.values()))
+            message = first_messages[0] if first_messages else "Ticket could not be updated."
+        else:
+            message = error.messages[0] if error.messages else "Ticket could not be updated."
+
         return JsonResponse(
             {
                 "ok": False,
-                "message": "Ticket could not be updated.",
-                "errors": error.message_dict,
+                "message": message,
+                "errors": getattr(error, "message_dict", {}),
             },
             status=400,
         )
@@ -345,3 +361,44 @@ def ticket_status_update(request, pk):
             "old_status": old_status,
         },
     })
+
+@login_required
+def ticket_reference_create(request, pk):
+    ticket = get_object_or_404(Ticket, pk=pk)
+
+    if not can_change_team_ticket_status(request.user, ticket):
+        return HttpResponseForbidden(
+            "You do not have permission to add references to this ticket."
+        )
+
+    next_url = (
+        request.POST.get("next")
+        or request.GET.get("next")
+        or reverse("ticket-detail", kwargs={"pk": ticket.pk})
+    )
+
+    if request.method == "POST":
+        form = TicketReferenceForm(request.POST)
+
+        if form.is_valid():
+            reference = form.save(commit=False)
+            reference.ticket = ticket
+            reference.save()
+
+            messages.success(request, "Reference added.")
+            return redirect(next_url)
+    else:
+        form = TicketReferenceForm(initial={
+            "provider": "manual",
+            "kind": "commit",
+        })
+
+    return render(
+        request,
+        "tickets/ticket_reference_form.html",
+        {
+            "form": form,
+            "ticket": ticket,
+            "next_url": next_url,
+        },
+    )
