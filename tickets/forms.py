@@ -12,7 +12,17 @@ class TicketForm(forms.ModelForm):
     )
     class Meta:
         model = Ticket
-        fields = ["title", "description", "status", "assigned_team", "assigned_user", "due_date", "priority"]
+        fields = [
+            "title",
+            "description",
+            "status",
+            "assigned_team",
+            "assigned_user",
+            "due_date",
+            "priority",
+            "estimated_time",
+            "actual_time"
+        ]
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

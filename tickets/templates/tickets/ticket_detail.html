@@ -68,6 +68,16 @@
         </div>
 
         <div>
+            <dt>Estimated Time</dt>
+            <dd>{{ ticket.estimated_time_display }}</dd>
+        </div>
+
+        <div>
+            <dt>Actual Time</dt>
+            <dd>{{ ticket.actual_time_display }}</dd>
+        </div>
+
+        <div>
             <dt>Opened by</dt>
             <dd>
                 {% if ticket.opened_by %}

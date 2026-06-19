@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django.core.validators import MinValueValidator
 
 
 class Ticket(models.Model):
@@ -68,6 +69,18 @@ class Ticket(models.Model):
         default=Priority.MEDIUM,
     )
     due_date = models.DateField()
+    estimated_time = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        help_text="Estimated time to complete, in minutes.",
+    )
+    actual_time = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        help_text="Actual time to complete, in minutes.",
+    )
 
     def clean(self):
         super().clean()
@@ -79,6 +92,10 @@ class Ticket(models.Model):
             raise ValidationError(
                 "A ticket must be assigned to exactly one user or one team."
             )
+        if self.actual_minutes is not None and self.status != self.Status.CLOSED:
+            raise ValidationError({
+                "actual_minutes": "Actual time can only be set when the ticket is closed."
+            })
 
     class Meta:
         constraints = [
@@ -120,3 +137,38 @@ class Ticket(models.Model):
             ticket = ticket.parent
 
         return None
+    
+    @property
+    def estimated_time_display(self):
+        return format_minutes(self.estimated_time)
+
+    @property
+    def actual_time_display(self):
+        return format_minutes(self.actual_time)
+
+def format_minutes(minutes):
+    if minutes is None:
+        return "Not set"
+
+    if minutes < 60:
+        return f"{minutes} min"
+
+    hours, minutes = divmod(minutes, 60)
+
+    if hours < 24:
+        if minutes:
+            return f"{hours} hr {minutes} min"
+        return f"{hours} hr"
+
+    days, hours = divmod(hours, 24)
+
+    if days < 7:
+        if hours:
+            return f"{days} day {hours} hr"
+        return f"{days} day"
+
+    weeks, days = divmod(days, 7)
+
+    if days:
+        return f"{weeks} week {days} day"
+    return f"{weeks} week"
