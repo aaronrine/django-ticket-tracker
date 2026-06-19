@@ -5,6 +5,8 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from teams.models import Team
+import hashlib
+import secrets
 
 
 class Ticket(models.Model):
@@ -403,3 +405,58 @@ class NotificationDelivery(models.Model):
 
     def __str__(self):
         return f"{self.event} -> {self.channel} ({self.status})"
+
+class IntegrationToken(models.Model):
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="integration_tokens",
+    )
+
+    name = models.CharField(max_length=120)
+
+    token_hash = models.CharField(max_length=64, unique=True)
+
+    token_prefix = models.CharField(
+        max_length=12,
+        help_text="Short prefix used to identify the token without storing the raw token.",
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    last_used_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    @staticmethod
+    def hash_token(raw_token):
+        return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def create_token(cls, *, team, name):
+        raw_token = secrets.token_urlsafe(32)
+
+        token = cls.objects.create(
+            team=team,
+            name=name,
+            token_hash=cls.hash_token(raw_token),
+            token_prefix=raw_token[:12],
+        )
+
+        return token, raw_token
+
+    def check_token(self, raw_token):
+        return secrets.compare_digest(
+            self.token_hash,
+            self.hash_token(raw_token),
+        )
+
+    def mark_used(self):
+        self.last_used_at = timezone.now()
+        self.save(update_fields=["last_used_at"])
+
+    def __str__(self):
+        return f"{self.name} for {self.team.name}"

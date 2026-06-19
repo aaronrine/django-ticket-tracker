@@ -24,5 +24,9 @@ urlpatterns = [
         views.ticket_status_update,
         name="ticket-status-update",
     ),
-    
+    path(
+        "integrations/ticket-references/",
+        views.integration_ticket_reference_create,
+        name="integration-ticket-reference-create",
+    ),
 ]

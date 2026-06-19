@@ -8,6 +8,7 @@ from .models import (
     NotificationChannel,
     NotificationRule,
     NotificationDelivery,
+    IntegrationToken,
 )
 
 admin.site.register(Ticket)
@@ -107,4 +108,23 @@ class NotificationDeliveryAdmin(admin.ModelAdmin):
         "last_error",
         "created_at",
         "sent_at",
+    )
+
+@admin.register(IntegrationToken)
+class IntegrationTokenAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "team",
+        "token_prefix",
+        "is_active",
+        "created_at",
+        "last_used_at",
+    )
+    list_filter = ("is_active", "created_at")
+    search_fields = ("name", "team__name", "token_prefix")
+    readonly_fields = (
+        "token_hash",
+        "token_prefix",
+        "created_at",
+        "last_used_at",
     )

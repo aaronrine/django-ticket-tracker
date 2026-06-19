@@ -2,7 +2,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from .forms import TicketForm, TicketReferenceForm
-from .models import Ticket, TicketEvent
+from .models import Ticket, TicketEvent, IntegrationToken, TicketReference
+from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -466,3 +467,136 @@ def ticket_reference_create(request, pk):
             "next_url": next_url,
         },
     )
+
+def get_bearer_token(request):
+    auth_header = request.headers.get("Authorization", "")
+
+    if not auth_header.startswith("Bearer "):
+        return None
+
+    return auth_header.removeprefix("Bearer ").strip()
+
+
+def authenticate_integration_request(request):
+    raw_token = get_bearer_token(request)
+
+    if not raw_token:
+        return None
+
+    token_hash = IntegrationToken.hash_token(raw_token)
+
+    try:
+        token = IntegrationToken.objects.select_related("team").get(
+            token_hash=token_hash,
+            is_active=True,
+        )
+    except IntegrationToken.DoesNotExist:
+        return None
+
+    token.mark_used()
+    return token
+
+@csrf_exempt
+@require_POST
+def integration_ticket_reference_create(request):
+    token = authenticate_integration_request(request)
+
+    if token is None:
+        return JsonResponse(
+            {"ok": False, "message": "Invalid or missing integration token."},
+            status=401,
+        )
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"ok": False, "message": "Invalid JSON body."},
+            status=400,
+        )
+
+    ticket_id = data.get("ticket_id")
+
+    if not ticket_id:
+        return JsonResponse(
+            {"ok": False, "message": "ticket_id is required."},
+            status=400,
+        )
+
+    ticket = get_object_or_404(Ticket, pk=ticket_id)
+
+    ticket_team = ticket.get_permission_team()
+
+    if ticket_team is None or ticket_team.id != token.team_id:
+        return JsonResponse(
+            {"ok": False, "message": "Token does not have access to this ticket."},
+            status=403,
+        )
+
+    kind = data.get("kind", TicketReference.Kind.COMMIT)
+    provider = data.get("provider", TicketReference.Provider.CUSTOM)
+    external_id = data.get("external_id")
+    url = data.get("url", "")
+    title = data.get("title", "")
+    metadata = data.get("metadata", {})
+
+    if not external_id:
+        return JsonResponse(
+            {"ok": False, "message": "external_id is required."},
+            status=400,
+        )
+
+    valid_kinds = {value for value, label in TicketReference.Kind.choices}
+    valid_providers = {value for value, label in TicketReference.Provider.choices}
+
+    if kind not in valid_kinds:
+        return JsonResponse(
+            {"ok": False, "message": "Invalid reference kind."},
+            status=400,
+        )
+
+    if provider not in valid_providers:
+        return JsonResponse(
+            {"ok": False, "message": "Invalid reference provider."},
+            status=400,
+        )
+
+    reference = TicketReference.objects.create(
+        ticket=ticket,
+        kind=kind,
+        provider=provider,
+        external_id=external_id,
+        url=url,
+        title=title,
+        metadata=metadata,
+    )
+
+    create_ticket_event(
+        ticket=ticket,
+        actor=None,
+        event_type=TicketEvent.Type.REFERENCE_ADDED,
+        new_values={
+            "reference_id": reference.pk,
+            "kind": reference.kind,
+            "kind_display": reference.get_kind_display(),
+            "provider": reference.provider,
+            "provider_display": reference.get_provider_display(),
+            "external_id": reference.external_id,
+            "url": reference.url,
+            "title": reference.title,
+        },
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "message": "Reference added.",
+        "reference": {
+            "id": reference.pk,
+            "ticket_id": ticket.pk,
+            "kind": reference.kind,
+            "provider": reference.provider,
+            "external_id": reference.external_id,
+            "url": reference.url,
+            "title": reference.title,
+        },
+    })
