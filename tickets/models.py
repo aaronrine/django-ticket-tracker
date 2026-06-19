@@ -275,3 +275,131 @@ class TeamTicketPolicy(models.Model):
         return f"Ticket policy for {self.team.name}"
 
 
+class TicketEvent(models.Model):
+    class Type(models.TextChoices):
+        CREATED = "ticket.created", "Ticket created"
+        UPDATED = "ticket.updated", "Ticket updated"
+        STATUS_CHANGED = "ticket.status_changed", "Status changed"
+        ASSIGNED = "ticket.assigned", "Ticket assigned"
+        CLOSED = "ticket.closed", "Ticket closed"
+        REOPENED = "ticket.reopened", "Ticket reopened"
+        REFERENCE_ADDED = "ticket.reference_added", "Reference added"
+
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.CASCADE,
+        related_name="events",
+    )
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ticket_events",
+    )
+
+    event_type = models.CharField(
+        max_length=64,
+        choices=Type.choices,
+    )
+
+    old_values = models.JSONField(default=dict, blank=True)
+    new_values = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_event_type_display()} for {self.ticket}"
+
+class NotificationChannel(models.Model):
+    class Provider(models.TextChoices):
+        SLACK = "slack", "Slack"
+        DISCORD = "discord", "Discord"
+        TEAMS = "teams", "Microsoft Teams"
+        WEBHOOK = "webhook", "Generic Webhook"
+        WHATSAPP = "whatsapp", "WhatsApp"
+
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="notification_channels",
+    )
+
+    provider = models.CharField(
+        max_length=32,
+        choices=Provider.choices,
+    )
+
+    name = models.CharField(max_length=120)
+
+    webhook_url = models.URLField(blank=True)
+
+    config = models.JSONField(default=dict, blank=True)
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_provider_display()})"
+
+
+class NotificationRule(models.Model):
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="notification_rules",
+    )
+
+    channel = models.ForeignKey(
+        NotificationChannel,
+        on_delete=models.CASCADE,
+        related_name="rules",
+    )
+
+    event_type = models.CharField(
+        max_length=64,
+        choices=TicketEvent.Type.choices,
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.team.name}: {self.event_type} -> {self.channel.name}"
+
+
+class NotificationDelivery(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        SENT = "sent", "Sent"
+        FAILED = "failed", "Failed"
+
+    event = models.ForeignKey(
+        TicketEvent,
+        on_delete=models.CASCADE,
+        related_name="notification_deliveries",
+    )
+
+    channel = models.ForeignKey(
+        NotificationChannel,
+        on_delete=models.CASCADE,
+        related_name="deliveries",
+    )
+
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+
+    attempts = models.PositiveIntegerField(default=0)
+
+    last_error = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.event} -> {self.channel} ({self.status})"

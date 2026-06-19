@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from .forms import TicketForm, TicketReferenceForm
-from .models import Ticket
+from .models import Ticket, TicketEvent
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -12,7 +12,13 @@ from django.http import HttpResponseForbidden
 from urllib.parse import urlencode
 from django.contrib import messages
 import json
-from .services import update_ticket_status
+from .services import (
+    update_ticket_status,
+    create_ticket_event,
+    create_assignment_event_if_changed,
+    serialize_ticket_update_fields,
+    create_ticket_updated_event_if_changed,
+)
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
@@ -105,6 +111,18 @@ def ticket_create(request):
                     "You do not have permission to create tickets for this team."
                 )
             ticket.save()
+            create_ticket_event(
+                ticket=ticket,
+                actor=request.user,
+                event_type=TicketEvent.Type.CREATED,
+                new_values={
+                    "title": ticket.title,
+                    "status": ticket.status,
+                    "status_display": ticket.get_status_display(),
+                    "priority": ticket.priority,
+                    "priority_display": ticket.get_priority_display(),
+                },
+            )
             messages.success(request, "Ticket created.")
             return redirect(next_url)
 
@@ -129,6 +147,9 @@ def ticket_edit(request, pk):
     if not can_change_team_ticket_status(request.user, ticket):
         return HttpResponseForbidden("You do not have permission to edit this ticket.")
     old_status = ticket.status
+    old_assigned_user = ticket.assigned_user
+    old_assigned_team = ticket.assigned_team
+    old_update_values = serialize_ticket_update_fields(ticket)
     next_url = request.POST.get("next") or request.GET.get("next") or reverse("ticket-list")
 
     if request.method == "POST":
@@ -166,6 +187,17 @@ def ticket_edit(request, pk):
 
                 messages.error(request, toast_message)
             else:
+                create_assignment_event_if_changed(
+                    ticket=updated_ticket,
+                    actor=request.user,
+                    old_assigned_user=old_assigned_user,
+                    old_assigned_team=old_assigned_team,
+                )
+                create_ticket_updated_event_if_changed(
+                    ticket=updated_ticket,
+                    actor=request.user,
+                    old_values=old_update_values,
+                )
                 messages.success(request, "Ticket saved.")
                 return redirect(next_url)
         else:
@@ -280,6 +312,18 @@ def ticket_subticket_create(request, pk):
             ticket.parent = parent_ticket
             ticket.opened_by = request.user
             ticket.save()
+            create_ticket_event(
+                ticket=ticket,
+                actor=request.user,
+                event_type=TicketEvent.Type.CREATED,
+                new_values={
+                    "title": ticket.title,
+                    "status": ticket.status,
+                    "status_display": ticket.get_status_display(),
+                    "priority": ticket.priority,
+                    "priority_display": ticket.get_priority_display(),
+                },
+            )
             messages.success(request, "Ticket created.")
             detail_url = reverse("ticket-detail", kwargs={"pk": parent_ticket.pk})
             return redirect(f"{detail_url}?{urlencode({'next': next_url})}")
@@ -388,6 +432,22 @@ def ticket_reference_create(request, pk):
             reference = form.save(commit=False)
             reference.ticket = ticket
             reference.save()
+
+            create_ticket_event(
+                ticket=ticket,
+                actor=request.user,
+                event_type=TicketEvent.Type.REFERENCE_ADDED,
+                new_values={
+                    "reference_id": reference.pk,
+                    "kind": reference.kind,
+                    "kind_display": reference.get_kind_display(),
+                    "provider": reference.provider,
+                    "provider_display": reference.get_provider_display(),
+                    "external_id": reference.external_id,
+                    "url": reference.url,
+                    "title": reference.title,
+                },
+            )
 
             messages.success(request, "Reference added.")
             return redirect(next_url)
