@@ -584,6 +584,9 @@ def integration_ticket_reference_create(request):
             "external_id": reference.external_id,
             "url": reference.url,
             "title": reference.title,
+            "integration_token_id": token.pk,
+            "integration_token_name": token.name,
+            "integration_token_prefix": token.token_prefix,
         },
     )
 

@@ -54,6 +54,11 @@ def build_ticket_event_text(event):
 
     if event.event_type == "ticket.reference_added":
         external_id = event.new_values.get("external_id", "a reference")
+        integration_name = event.new_values.get("integration_token_name")
+
+        if integration_name:
+            return f'Integration "{integration_name}" added reference {external_id} to ticket "{ticket.title}".'
+
         return f'{actor} added reference {external_id} to ticket "{ticket.title}".'
 
     if event.event_type == "ticket.assigned":
