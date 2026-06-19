@@ -1,4 +1,6 @@
 from django.core.exceptions import ValidationError
+from django.db import transaction
+from .notifications import send_pending_deliveries_for_event
 
 from .models import (
     Ticket,
@@ -48,6 +50,9 @@ def create_ticket_event(
             event=event,
             channel=rule.channel,
         )
+    transaction.on_commit(
+        lambda: send_pending_deliveries_for_event(event)
+    )
 
     return event
 

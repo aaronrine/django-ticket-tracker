@@ -187,3 +187,20 @@ def send_notification_delivery(delivery):
         "sent_at",
     ])
     return True
+
+def send_pending_deliveries_for_event(event):
+    deliveries = event.notification_deliveries.filter(
+        status=NotificationDelivery.Status.PENDING,
+    ).select_related(
+        "event",
+        "event__ticket",
+        "event__actor",
+        "channel",
+    )
+
+    results = []
+
+    for delivery in deliveries:
+        results.append(send_notification_delivery(delivery))
+
+    return results
