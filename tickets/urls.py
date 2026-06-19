@@ -14,4 +14,9 @@ urlpatterns = [
         views.ticket_subticket_create,
         name="ticket-subticket-create",
     ),
+    path(
+        "<int:pk>/status/",
+        views.ticket_status_update,
+        name="ticket-status-update",
+    ),
 ]

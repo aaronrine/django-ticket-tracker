@@ -100,73 +100,264 @@
     </form>
     <p>{{ tickets|length }} ticket{{ tickets|length|pluralize }} found</p>
     {% if tickets %}
+    <div class="kanban-board">
+        {% for column in kanban_columns %}
+        <section class="kanban-column" data-status="{{ column.value }}">
+            <header class="kanban-column-header">
+                <h3>{{ column.label }}</h3>
+                <span class="kanban-count">{{ column.tickets|length }}</span>
+            </header>
     
-    <table border="1" cellpadding="6" class="ticket-list-table">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Due</th>
-                <th>Assignee</th>
-            </tr>
-        </thead>
-    
-        <tbody>
-            {% for ticket in tickets %}
-            <tr class="ticket-row priority-{{ ticket.priority|lower }}" title="Priority: {{ ticket.get_priority_display }}">
-                <td>
-                    <a href="{% url 'ticket-detail' ticket.pk %}?next={{ return_url|urlencode }}">
-                    <strong>{{ ticket.title }}</strong>
+            <div class="kanban-dropzone" data-status="{{ column.value }}">
+                {% for ticket in column.tickets %}
+                <article class="kanban-card priority-{{ ticket.priority|lower }}" data-ticket-id="{{ ticket.pk }}"
+                    draggable="true">
+                    <a class="kanban-card-title" href="{% url 'ticket-detail' ticket.pk %}?next={{ return_url|urlencode }}">
+                        {{ ticket.title }}
                     </a>
     
+                    <div class="kanban-card-meta">
+                        <span class="pill">{{ ticket.get_priority_display }}</span>
+    
+                        {% if ticket.due_date %}
+                        <span class="muted">Due {{ ticket.due_date }}</span>
+                        {% else %}
+                        <span class="muted">No due date</span>
+                        {% endif %}
+                    </div>
+    
                     {% if ticket.is_overdue %}
-                    <br>
                     <strong class="overdue-label">Overdue</strong>
                     {% endif %}
-                </td>
     
-                <td>{{ ticket.get_status_display }}</td>
-    
-    
-                <td>
-                    {% if ticket.due_date %}
-                    {{ ticket.due_date }}
-                    {% else %}
-                    No due date
-                    {% endif %}
-                </td>
-                <td>
                     {% if ticket.assigned_user %}
-                        {{ ticket.assigned_user.username }}
+                    <div class="muted">User: {{ ticket.assigned_user.username }}</div>
                     {% elif ticket.assigned_team %}
-                        {{ ticket.assigned_team.name }}
+                    <div class="muted">Team: {{ ticket.assigned_team.name }}</div>
                     {% endif %}
-                </td>
-            </tr>
-            
-            {% endfor %}
-        </tbody>
-    </table>
+                </article>
+                {% empty %}
+                <div class="kanban-empty">No tickets</div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
     {% else %}
     <p>No tickets found.</p>
     {% endif %}
-    {% if page_obj.has_other_pages %}
-    <nav class="pagination">
-        {% if page_obj.has_previous %}
-        <a href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.previous_page_number }}">
-            Previous
-        </a>
-        {% endif %}
+    <dialog id="close-ticket-dialog" class="modal">
+        <form method="dialog" id="close-ticket-form" class="modal-card">
+            <h3>Close ticket</h3>
     
-        <span>
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </span>
+            <p class="muted">Actual time is required when moving a ticket to Closed.</p>
     
-        {% if page_obj.has_next %}
-        <a href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.next_page_number }}">
-            Next
-        </a>
-        {% endif %}
-    </nav>
-    {% endif %}
+            <label for="actual-time-input">Actual time spent, in minutes</label>
+            <input type="number" id="actual-time-input" min="1" step="1" required>
+    
+            <div class="modal-actions">
+                <button type="button" id="close-ticket-cancel" class="button secondary">
+                    Cancel
+                </button>
+                <button type="submit" class="button">
+                    Close ticket
+                </button>
+            </div>
+        </form>
+    </dialog>
+{% endblock %}
+{% block scripts %}
+<script>
+    let draggedCard = null;
+
+    function removeEmptyPlaceholder(dropzone) {
+        const empty = dropzone.querySelector(".kanban-empty");
+        if (empty) {
+            empty.remove();
+        }
+    }
+
+    function ensureEmptyPlaceholder(dropzone) {
+        const hasCards = dropzone.querySelector(".kanban-card");
+
+        if (!hasCards && !dropzone.querySelector(".kanban-empty")) {
+            const empty = document.createElement("div");
+            empty.className = "kanban-empty";
+            empty.textContent = "No tickets";
+            dropzone.appendChild(empty);
+        }
+    }
+
+    function updateColumnCount(dropzone) {
+        const column = dropzone.closest(".kanban-column");
+        const count = column.querySelector(".kanban-count");
+        const cards = dropzone.querySelectorAll(".kanban-card");
+
+        count.textContent = cards.length;
+    }
+
+    function getCookie(name) {
+        const cookies = document.cookie ? document.cookie.split(";") : [];
+
+        for (const cookie of cookies) {
+            const trimmed = cookie.trim();
+
+            if (trimmed.startsWith(name + "=")) {
+                return decodeURIComponent(trimmed.slice(name.length + 1));
+            }
+        }
+
+        return null;
+    }
+
+    function askForActualTime() {
+        const dialog = document.getElementById("close-ticket-dialog");
+        const form = document.getElementById("close-ticket-form");
+        const input = document.getElementById("actual-time-input");
+        const cancelButton = document.getElementById("close-ticket-cancel");
+
+        return new Promise((resolve) => {
+            input.value = "";
+
+            function cleanup() {
+                form.removeEventListener("submit", handleSubmit);
+                cancelButton.removeEventListener("click", handleCancel);
+                dialog.removeEventListener("cancel", handleCancel);
+            }
+
+            function handleSubmit(event) {
+                event.preventDefault();
+
+                if (!input.reportValidity()) {
+                    return;
+                }
+
+                const value = input.value;
+
+                cleanup();
+                dialog.close();
+                resolve(value);
+            }
+
+            function handleCancel() {
+                cleanup();
+                dialog.close();
+                resolve(null);
+            }
+
+            form.addEventListener("submit", handleSubmit);
+            cancelButton.addEventListener("click", handleCancel);
+            dialog.addEventListener("cancel", handleCancel);
+
+            dialog.showModal();
+            input.focus();
+        });
+    }
+
+    document.querySelectorAll(".kanban-card").forEach((card) => {
+        card.addEventListener("dragstart", (event) => {
+            draggedCard = card;
+            card.classList.add("dragging");
+
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", card.dataset.ticketId);
+        });
+
+        card.addEventListener("dragend", () => {
+            card.classList.remove("dragging");
+            draggedCard = null;
+
+            document.querySelectorAll(".kanban-dropzone").forEach((dropzone) => {
+                dropzone.classList.remove("is-drag-over");
+            });
+        });
+    });
+
+    document.querySelectorAll(".kanban-dropzone").forEach((dropzone) => {
+        dropzone.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+            dropzone.classList.add("is-drag-over");
+        });
+
+        dropzone.addEventListener("dragleave", () => {
+            dropzone.classList.remove("is-drag-over");
+        });
+
+        dropzone.addEventListener("drop", async (event) => {
+            event.preventDefault();
+            dropzone.classList.remove("is-drag-over");
+
+            if (!draggedCard) {
+                return;
+            }
+
+            const card = draggedCard;
+            const oldDropzone = card.closest(".kanban-dropzone");
+            const oldStatus = oldDropzone.dataset.status;
+            const newStatus = dropzone.dataset.status;
+            const ticketId = card.dataset.ticketId;
+
+            if (oldStatus === newStatus) {
+                return;
+            }
+
+            let actualTime = null;
+
+            if (newStatus === "closed") {
+                actualTime = await askForActualTime();
+
+                if (!actualTime) {
+                    showToast("Move cancelled. Actual time is required to close a ticket.", "warning");
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(`/tickets/${ticketId}/status/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"),
+                    },
+                    body: JSON.stringify({
+                        status: newStatus,
+                        actual_time: actualTime,
+                    }),
+                });
+
+                const responseText = await response.text();
+
+                let data;
+
+                try {
+                    data = JSON.parse(responseText);
+                } catch (error) {
+                    console.error("Expected JSON, got this instead:");
+                    console.error(responseText);
+
+                    showToast("Server returned a non-JSON response. Check console.", "error");
+                    return;
+                }
+
+                if (!response.ok || !data.ok) {
+                    showToast(data.message || "Ticket could not be moved.", "error");
+                    return;
+                }
+
+                removeEmptyPlaceholder(dropzone);
+                dropzone.appendChild(card);
+
+                ensureEmptyPlaceholder(oldDropzone);
+                updateColumnCount(oldDropzone);
+                updateColumnCount(dropzone);
+
+                showToast(data.message, "success");
+            } catch (error) {
+                console.error("Kanban move failed:", error);
+                showToast("Network error. Ticket was not moved.", "error");
+            }
+        });
+    });
+</script>
 {% endblock %}

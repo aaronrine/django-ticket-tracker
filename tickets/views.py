@@ -11,6 +11,11 @@ from teams.models import Team
 from django.http import HttpResponseForbidden
 from urllib.parse import urlencode
 from django.contrib import messages
+import json
+
+from django.core.exceptions import ValidationError
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
 
 from teams.permissions import can_view_team_ticket, can_delete_team_ticket, can_change_team_ticket_status, can_create_team_ticket, can_create_team_subticket
 
@@ -23,9 +28,6 @@ def ticket_list(request):
     assigned_team = request.GET.get("assigned_team")
     q = request.GET.get("q")
     sort = request.GET.get("sort", "due_date")
-
-    if "status" not in request.GET:
-        status = Ticket.Status.OPEN
 
     tickets = Ticket.objects.all()
 
@@ -57,22 +59,22 @@ def ticket_list(request):
     }
 
     tickets = tickets.order_by(allowed_sorts.get(sort, "due_date"))
-    paginator = Paginator(tickets, 10)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
 
-    query_params = request.GET.copy()
+    kanban_columns = []
 
-    if "page" in query_params:
-        del query_params["page"]
+    for status_value, status_label in Ticket.Status.choices:
+        kanban_columns.append({
+            "value": status_value,
+            "label": status_label,
+            "tickets": tickets.filter(status=status_value),
+        })
 
     User = get_user_model()
     return render(
         request,
         "tickets/ticket_list.html",
         {
-            "tickets": page_obj,
-            "page_obj": page_obj,
+            "tickets": tickets,
             "status_choices": Ticket.Status.choices,
             "selected_status": status,
             "priority_choices": Ticket.Priority.choices,
@@ -84,8 +86,8 @@ def ticket_list(request):
             "selected_assigned_team": assigned_team,
             "search_query": q,
             "selected_sort": sort,
-            "query_params": query_params.urlencode(),
             "return_url": request.get_full_path(),
+            "kanban_columns": kanban_columns,
         },
     )
 
@@ -265,3 +267,81 @@ def ticket_subticket_create(request, pk):
             "button_text": "Create subticket",
         },
     )
+
+@login_required
+@require_POST
+def ticket_status_update(request, pk):
+    ticket = get_object_or_404(Ticket, pk=pk)
+
+    if not can_change_team_ticket_status(request.user, ticket):
+        return JsonResponse(
+            {"ok": False, "message": "You do not have permission to update this ticket."},
+            status=403,
+        )
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"ok": False, "message": "Invalid request body."},
+            status=400,
+        )
+
+    new_status = data.get("status")
+    actual_time = data.get("actual_time")
+
+    valid_statuses = {value for value, label in Ticket.Status.choices}
+
+    if new_status not in valid_statuses:
+        return JsonResponse(
+            {"ok": False, "message": "Invalid status."},
+            status=400,
+        )
+
+    old_status = ticket.status
+    ticket.status = new_status
+
+    if new_status == Ticket.Status.CLOSED:
+        ticket.closed_by = request.user
+
+        if actual_time in ("", None):
+            return JsonResponse(
+                {"ok": False, "message": "Actual time is required when closing a ticket."},
+                status=400,
+            )
+
+        try:
+            ticket.actual_time = int(actual_time)
+        except (TypeError, ValueError):
+            return JsonResponse(
+                {"ok": False, "message": "Actual time must be a number of minutes."},
+                status=400,
+            )
+    else:
+        ticket.closed_by = None
+        ticket.actual_time = None
+
+    try:
+        ticket.full_clean()
+    except ValidationError as error:
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "Ticket could not be updated.",
+                "errors": error.message_dict,
+            },
+            status=400,
+        )
+
+    ticket.save()
+
+    return JsonResponse({
+        "ok": True,
+        "message": f"Moved ticket to {ticket.get_status_display()}.",
+        "ticket": {
+            "id": ticket.pk,
+            "status": ticket.status,
+            "status_display": ticket.get_status_display(),
+            "old_status": old_status,
+        },
+    })
