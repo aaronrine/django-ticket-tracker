@@ -8,39 +8,53 @@ class Command(BaseCommand):
     help = "Send pending notification deliveries."
 
     def add_arguments(self, parser):
+        parser.add_argument("--limit", type=int, default=50)
         parser.add_argument(
-            "--limit",
+            "--retry-failed",
+            action="store_true",
+            help="Also retry failed deliveries.",
+        )
+        parser.add_argument(
+            "--max-attempts",
             type=int,
-            default=25,
-            help="Maximum number of pending deliveries to process.",
+            default=3,
+            help="Maximum attempts before skipping a delivery.",
         )
 
     def handle(self, *args, **options):
-        limit = options["limit"]
+        statuses = [NotificationDelivery.Status.PENDING]
+
+        if options["retry_failed"]:
+            statuses.append(NotificationDelivery.Status.FAILED)
 
         deliveries = NotificationDelivery.objects.filter(
-            status=NotificationDelivery.Status.PENDING,
+            status__in=statuses,
+            attempts__lt=options["max_attempts"],
         ).select_related(
             "event",
             "event__ticket",
             "event__actor",
             "channel",
-        ).order_by("created_at")[:limit]
+        ).order_by(
+            "created_at",
+        )[: options["limit"]]
 
-        sent_count = 0
-        failed_count = 0
+        processed = 0
+        sent = 0
+        failed = 0
 
         for delivery in deliveries:
-            was_sent = send_notification_delivery(delivery)
+            processed += 1
 
-            if was_sent:
-                sent_count += 1
+            if send_notification_delivery(delivery):
+                sent += 1
             else:
-                failed_count += 1
+                failed += 1
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Processed {sent_count + failed_count} deliveries: "
-                f"{sent_count} sent, {failed_count} failed."
-            )
-        )
+        self.stdout.write(f"Processed: {processed}")
+        self.stdout.write(self.style.SUCCESS(f"Sent: {sent}"))
+
+        if failed:
+            self.stdout.write(self.style.WARNING(f"Failed: {failed}"))
+        else:
+            self.stdout.write("Failed: 0")
