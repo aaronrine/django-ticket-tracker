@@ -175,6 +175,24 @@
     {% include "tickets/_subticket_list.html" with subtickets=subtickets next_url=next_url only %}
     
 </section>
+<h2>Activity</h2>
+
+{% if events %}
+<ul class="activity-list">
+    {% for event in events %}
+    <li class="activity-item">
+        <div>
+            <strong>{{ event.get_event_type_display }}</strong>
+            <span>{{ event.created_at }}</span>
+        </div>
+
+        <p>{{ event.summary }}</p>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No activity yet.</p>
+{% endif %}
 <p>
     <a href="{{ next_url }}">Back to tickets</a>
 </p>

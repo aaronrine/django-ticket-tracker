@@ -23,6 +23,7 @@ from .services import (
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
+from .notifications import build_ticket_event_text
 
 from teams.permissions import can_view_team_ticket, can_delete_team_ticket, can_change_team_ticket_status, can_create_team_ticket, can_create_team_subticket
 
@@ -251,6 +252,12 @@ def ticket_detail(request, pk):
     ).order_by("status", "due_date", "title")
 
     references = ticket.references.order_by("-created_at")
+    events = list(
+        ticket.events.select_related("actor").order_by("-created_at")
+    )
+
+    for event in events:
+        event.summary = build_ticket_event_text(event)
 
     return render(
         request,
@@ -260,6 +267,7 @@ def ticket_detail(request, pk):
             "next_url": next_url,
             "subtickets": subtickets,
             "references": references,
+            "events": events,
         },
     )
 
