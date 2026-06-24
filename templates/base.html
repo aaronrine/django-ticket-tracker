@@ -18,7 +18,6 @@
             |
             <a href="{% url 'ticket-list' %}">Tickets</a>
             <a href="{% url 'teams:team-list' %}">Teams</a>
-            <a href="{% url 'profile-edit' %}">Edit profile</a>
         </p>
 
         <form method="post" action="{% url 'logout' %}">
@@ -66,7 +65,21 @@
                     toast.addEventListener("transitionend", () => toast.remove(), { once: true });
                 }, 3500);
             });
+            document.querySelectorAll("[data-local-datetime]").forEach((el) => {
+                const raw = el.getAttribute("datetime");
+                if (!raw) return;
+
+                const date = new Date(raw);
+                if (Number.isNaN(date.getTime())) return;
+
+                el.textContent = new Intl.DateTimeFormat(undefined, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                }).format(date);
+            });
         });
+
+        
     </script>
     {% block scripts %}{% endblock %}
 </body>

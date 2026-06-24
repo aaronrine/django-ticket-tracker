@@ -59,12 +59,20 @@
 
         <div>
             <dt>Created</dt>
-            <dd>{{ ticket.created_at|date:"M j, Y g:i A" }}</dd>
+            <dd>
+                <time datetime="{{ ticket.created_at|date:'c' }}" data-local-datetime>
+                    {{ ticket.created_at|date:"M j, Y g:i A" }}
+                </time>
+            </dd>
         </div>
 
         <div>
             <dt>Updated</dt>
-            <dd>{{ ticket.updated_at|date:"M j, Y g:i A" }}</dd>
+            <dd>
+                <time datetime="{{ ticket.updated_at|date:'c' }}" data-local-datetime>
+                    {{ ticket.updated_at|date:"M j, Y g:i A" }}
+                </time>
+            </dd>
         </div>
 
         <div>
