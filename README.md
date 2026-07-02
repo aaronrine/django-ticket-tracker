@@ -133,6 +133,20 @@ docker compose exec web uv run python manage.py integration_tokens revoke --toke
 - Docker
 - HTML / CSS / JavaScript
 
+## Screenshots
+
+### Ticket List
+![Ticket list showing filters, priorities, and ticket status](docs/assets/ticket-list.png)
+
+### Ticket Detail
+![Ticket detail page showing ticket metadata](docs/assets/ticket-detail.png)
+
+### Ticket Integrations
+![Ticket detail page showing version control reference and activity log](docs/assets/ticket-integrations.png)
+
+### Discord Integrations
+![Example discord notification](docs/assets/discord-integrations.png)
+
 ## Future
 
 - Add more chat channel providers
