@@ -13,4 +13,4 @@ RUN uv sync --no-dev --no-install-project
 
 COPY . .
 
-CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["sh", "-c", "uv run python manage.py migrate && uv run python manage.py collectstatic --noinput && exec uv run gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]

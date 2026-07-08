@@ -2,6 +2,7 @@ services:
   web:
     build: .
     user: "${HOST_UID}:${HOST_GID}"
+    # local dev command
     command: uv run python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app

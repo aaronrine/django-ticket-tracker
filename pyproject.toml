@@ -3,6 +3,9 @@ name = "local-todo"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "dj-database-url>=3.1.2",
     "django>=5.0",
+    "gunicorn>=26.0.0",
     "psycopg[binary]",
+    "whitenoise>=6.12.0",
 ]
