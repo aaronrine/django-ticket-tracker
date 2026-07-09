@@ -19,6 +19,10 @@ services:
       DATABASE_PORT: "5432"
     depends_on:
       - db
+    extra_hosts:
+      - "tickettracker.rine.us:10.10.10.171"
+    env_file:
+      - .env
 
   db:
     image: postgres:16
